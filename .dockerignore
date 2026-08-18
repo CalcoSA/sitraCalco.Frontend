@@ -1,0 +1,14 @@
+node_modules
+dist
+
+.git
+.github
+
+.vscode
+
+.angular
+coverage
+
+*.log
+
+README.md

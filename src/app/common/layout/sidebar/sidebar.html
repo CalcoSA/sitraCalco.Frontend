@@ -1,0 +1,174 @@
+<aside class="h-100 d-grid position-relative overflow-hidden" style="background-color: #4b2e1f; color: #ffffff; grid-template-rows: 155px minmax(0, 1fr) 95px; border-right: 1px solid rgba(255,255,255,0.15);">
+  <button
+    mat-icon-button
+    type="button"
+    (click)="toggleSidebar.emit()"
+    (mouseenter)="toggleHovered = true"
+    (mouseleave)="toggleHovered = false"
+    class="rounded-circle d-flex align-items-center justify-content-center border-0"
+    [style.background-color]="
+      toggleHovered
+        ? 'rgba(247, 232, 216, 0.08)'
+        : 'transparent'
+    "
+    [style.color]="
+      toggleHovered
+        ? '#ffffff'
+        : '#f7e8d8'
+    "
+    style="
+      position: absolute;
+      top: 14px;
+      right: 10px;
+      z-index: 10;
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      box-shadow: none;
+      transition: background-color 0.2s ease;
+    "
+    [attr.aria-label]="sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'"
+  >
+    <mat-icon style="font-size: 24px; width: 24px; height: 24px;">
+      {{ sidebarOpen ? 'chevron_left' : 'chevron_right' }}
+    </mat-icon>
+  </button>
+  <div class="d-flex align-items-center justify-content-center overflow-hidden">
+    <a routerLink="/" class="d-flex align-items-center justify-content-center text-decoration-none">
+      <img src="/images/MonedaCrepes.png" alt="Crepes & Waffles" [style.width.px]="sidebarOpen ? 115 : 52" [style.height.px]="sidebarOpen ? 115 : 52" style="object-fit: contain; transition: all 0.25s ease;" />
+    </a>
+  </div>
+  <nav class="d-flex flex-column gap-2 overflow-auto px-2" [class.px-3]="sidebarOpen" [class.px-2]="!sidebarOpen">
+    @for (item of rootMenuOptions; track item.idMenuOption) {
+      @if (hasChildren(item) || !item.pathMenuOption) {
+        <button
+          type="button"
+          class="btn border-0 d-flex align-items-center w-100"
+          (mouseenter)="hoveredMenuId = item.idMenuOption"
+          (mouseleave)="hoveredMenuId = null"
+          [class.justify-content-center]="!sidebarOpen"
+          [class.gap-3]="sidebarOpen"
+          (click)="toggleMenu(item)"
+          [style.background-color]="
+            isMenuActive(item)
+              ? '#f7e8d8'
+              : hoveredMenuId === item.idMenuOption
+                ? 'rgba(247,232,216,0.14)'
+                : 'transparent'
+          "
+          [style.color]="
+            isMenuActive(item)
+              ? '#4b2e1f'
+              : '#f8ebdd'
+          "
+          style="
+            min-height: 48px;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 500;
+          "
+        >
+          <mat-icon>
+            {{ getMenuIcon(item.nameMenuOption) }}
+          </mat-icon>
+          @if (sidebarOpen) {
+            <span class="flex-grow-1 text-start">
+              {{ item.nameMenuOption }}
+            </span>
+            <mat-icon>
+              {{
+                isExpanded(item)
+                  ? 'keyboard_arrow_up'
+                  : 'keyboard_arrow_down'
+              }}
+            </mat-icon>
+          }
+        </button>
+        @if (sidebarOpen && isExpanded(item)) {
+          <div class="d-flex flex-column gap-1 ps-3">
+            @for (child of getChildren(item.idMenuOption); track child.idMenuOption) {
+              <a [routerLink]="child.pathMenuOption"
+                (mouseenter)="hoveredMenuId = child.idMenuOption"
+                (mouseleave)="hoveredMenuId = null"
+                routerLinkActive="active"
+                #route="routerLinkActive"
+                class="d-flex align-items-center gap-2 text-decoration-none"
+                [style.background-color]="
+                  route.isActive
+                    ? 'rgba(247,232,216,0.22)'
+                    : hoveredMenuId === child.idMenuOption
+                      ? 'rgba(247,232,216,0.14)'
+                      : 'transparent'
+                "
+                style="
+                  color: #f8ebdd;
+                  min-height: 42px;
+                  border-radius: 10px;
+                  padding: 8px 12px;
+                  font-weight: 500;
+                "
+              >
+                <mat-icon style="font-size: 21px; width: 21px; height: 21px;">
+                  {{ getMenuIcon(child.nameMenuOption) }}
+                </mat-icon>
+                {{ child.nameMenuOption }}
+              </a>
+            }
+          </div>
+        }
+      } @else {
+        <a
+          [routerLink]="item.pathMenuOption"
+          routerLinkActive="active"
+          #route="routerLinkActive"
+          class="d-flex align-items-center text-decoration-none"
+          [class.justify-content-center]="!sidebarOpen"
+          [class.gap-3]="sidebarOpen"
+          [style.background-color]="
+            route.isActive
+              ? '#f7e8d8'
+              : 'transparent'
+          "
+          [style.color]="
+            route.isActive
+              ? '#4b2e1f'
+              : '#f8ebdd'
+          "
+          style="
+            min-height: 48px;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 600;
+          "
+        >
+          <mat-icon>
+            {{ getMenuIcon(item.nameMenuOption) }}
+          </mat-icon>
+          @if (sidebarOpen) {
+            <span>
+              {{ item.nameMenuOption }}
+            </span>
+          }
+        </a>
+      }
+    }
+  </nav>
+  <div class="d-flex align-items-center gap-2 px-3" style="border-top: 1px solid rgba(255,255,255,0.18);" [class.justify-content-center]="!sidebarOpen">
+    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style=" width: 44px; height: 44px; background-color: #f7e8d8; color: #4b2e1f; font-size: 17px;">
+      {{ avatarLetter }}
+    </div>
+    @if (sidebarOpen) {
+      <div class="overflow-hidden">
+        <div class="text-truncate" style="font-size: 11px; font-weight: 500;">
+          {{ displayName }}
+        </div>
+        <div style="font-size: 12px; color: #ead9c9;">
+          {{ roleName }}
+        </div>
+      </div>
+    }
+  </div>
+</aside>

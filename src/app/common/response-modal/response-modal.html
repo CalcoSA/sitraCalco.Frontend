@@ -1,0 +1,27 @@
+<div class="text-center" style="padding: 32px 32px 16px; background-color: #fffdf8;">
+  <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" [style.background-color]="config.backgroundColor" [style.color]="config.color" style="width: 72px; height: 72px;">
+    <mat-icon style="font-size: 44px; width: 44px; height: 44px;">
+      {{ config.icon }}
+    </mat-icon>
+  </div>
+  <h2 class="mb-2" style="color: #4b2e1f; font-size: 22px; font-weight: 700;">
+    {{ data.title }}
+  </h2>
+  <p class="m-0" style="color: #6b4a3a; font-size: 15px; line-height: 1.6;">
+    {{ data.message }}
+  </p>
+</div>
+<div mat-dialog-actions class="d-flex justify-content-center gap-2 px-4 pb-4 pt-2" style="background-color: #fffdf8;">
+  @if (isConfirmModal) {
+    <button mat-stroked-button type="button" (click)="close()" style="border-color: #8b6a55; color: #4b2e1f; min-width: 120px; min-height: 44px; border-radius: 10px; font-weight: 600;">
+      Cancelar
+    </button>
+    <button mat-flat-button type="button" (click)="confirm()" style="background-color: #c62828; color: #ffffff; min-width: 120px; min-height: 44px; border-radius: 10px; font-weight: 600;">
+      {{ data.confirmButtonText || 'Confirmar' }}
+    </button>
+  } @else {
+    <button mat-flat-button type="button" (click)="close()" style="background-color: #4b2e1f; color: #ffffff; min-width: 120px; min-height: 44px; border-radius: 10px; font-weight: 600;">
+      {{ data.buttonText || 'Aceptar' }}
+    </button>
+  }
+</div>

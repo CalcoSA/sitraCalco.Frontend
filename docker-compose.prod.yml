@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_CONFIGURATION: production
+
+    container_name: sitracalco-frontend-prod
+
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8080:80"
