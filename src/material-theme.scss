@@ -1,0 +1,233 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  @include mat.form-field-overrides((
+    outlined-container-shape: 16px,
+
+    container-height: 56px,
+    container-vertical-padding: 16px,
+
+    outlined-outline-color: #cfc5be,
+    outlined-hover-outline-color: #8b6a55,
+    outlined-focus-outline-color: #4b2e1f,
+    outlined-focus-label-text-color: #4b2e1f,
+    outlined-label-text-color: #6f4f3d,
+    outlined-input-text-color: #4B2E1F,
+    outlined-focus-outline-width: 2px,
+
+    container-text-size: 16px,
+    container-text-weight: 400,
+    container-text-line-height: 24px,
+
+    outlined-label-text-size: 16px,
+    outlined-label-text-populated-size: 16px,
+    outlined-label-text-weight: 400,
+  ));
+  @include mat.button-overrides((
+    outlined-state-layer-color: #DED7CE,
+    outlined-hover-state-layer-opacity: 0.25,
+    outlined-focus-state-layer-opacity: 0.12,
+    outlined-pressed-state-layer-opacity: 0.20,
+    outlined-ripple-color: rgba(247, 232, 216, 0.35),
+  ));
+  @include mat.table-overrides((
+    row-item-outline-color: #ebe6e2,
+  ));
+  @include mat.select-overrides((
+    panel-background-color: #fffdf8,
+    enabled-arrow-color: #6f4f3d,
+    focused-arrow-color: #4b2e1f,
+    enabled-trigger-text-color: #4B2E1F,
+    placeholder-text-color: #7A6252,
+  ));
+  @include mat.option-overrides((
+    label-text-color: #4b2e1f,
+    hover-state-layer-color: rgba(75, 46, 31, 0.06),
+    focus-state-layer-color: rgba(75, 46, 31, 0.06),
+    selected-state-layer-color: #f1ebe5,
+    selected-state-label-text-color: #4b2e1f,
+  ));
+  @include mat.pseudo-checkbox-overrides((
+    full-selected-icon-color: #5a3423,
+    full-selected-checkmark-color: #fffdf8,
+    full-unselected-icon-color: #8b6a55,
+  ));
+}
+
+.mat-mdc-table .mat-mdc-row:hover {
+  background-color: #f5f3f0;
+}
+
+.mat-mdc-option.mat-mdc-option-multiple {
+  background-color: #fffdf8 !important;
+}
+
+.mat-mdc-option.mat-mdc-option-multiple.mdc-list-item--selected {
+  background-color: #f1ebe5 !important;
+}
+
+.mat-mdc-option.mat-mdc-option-multiple:not(.mdc-list-item--selected):hover {
+  background-color: rgba(75, 46, 31, 0.06) !important;
+}
+
+.mat-mdc-option.mat-mdc-option-multiple.mdc-list-item--selected:hover {
+  background-color: #e8dfd7 !important;
+}
+
+/* =========================================================
+   PAGINADOR - SELECTOR FILAS POR PÁGINA
+   ========================================================= */
+
+.paginator-size-button {
+  border: 0;
+  outline: 0;
+
+  min-width: 48px;
+  height: 36px;
+
+  padding: 0 4px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  background: transparent;
+  color: #4b2e1f;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+
+  cursor: pointer;
+}
+
+.paginator-size-button .mat-icon {
+  margin: 0;
+
+  width: 18px;
+  height: 18px;
+
+  font-size: 18px;
+  line-height: 18px;
+
+  color: #4b2e1f;
+}
+
+.paginator-size-button:hover:not(:disabled) {
+  background-color: transparent;
+}
+
+.paginator-size-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+
+/* =========================================================
+   PANEL
+   ========================================================= */
+
+.mat-mdc-menu-panel.paginator-size-menu {
+  min-width: 54px !important;
+  max-width: 54px !important;
+
+  border-radius: 16px !important;
+
+  background-color: #fffdf8 !important;
+
+  overflow: hidden !important;
+}
+
+.paginator-size-menu .mat-mdc-menu-content {
+  padding: 0 !important;
+
+  background-color: #fffdf8 !important;
+}
+
+
+/* =========================================================
+   OPCIONES
+   ========================================================= */
+
+.paginator-size-menu .mat-mdc-menu-item {
+  min-width: 54px !important;
+  width: 54px !important;
+
+  min-height: 42px !important;
+  height: 42px !important;
+
+  padding: 0 16px !important;
+
+  color: #4b2e1f !important;
+  background-color: #fffdf8 !important;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.paginator-size-menu .mat-mdc-menu-item .mat-mdc-menu-item-text {
+  color: #4b2e1f !important;
+}
+
+
+/* OPCIÓN NORMAL + HOVER */
+
+.paginator-size-menu
+.mat-mdc-menu-item:not(.paginator-size-selected):hover {
+  background-color: #f7f3ef !important;
+}
+
+
+/* OPCIÓN ACTUALMENTE SELECCIONADA */
+
+.paginator-size-menu
+.mat-mdc-menu-item.paginator-size-selected {
+  background-color: #f1ebe5 !important;
+  color: #4b2e1f !important;
+}
+
+
+/* SI PASAS EL MOUSE SOBRE LA SELECCIONADA */
+
+.paginator-size-menu
+.mat-mdc-menu-item.paginator-size-selected:hover {
+  background-color: #e8dfd7 !important;
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}

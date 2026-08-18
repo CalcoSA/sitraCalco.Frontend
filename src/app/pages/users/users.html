@@ -1,0 +1,294 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex justify-content-between align-items-center" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        manage_accounts
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Usuario - Roles
+      </h2>
+    </div>
+  </div>
+  <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+    <h3 class="mb-4" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+      Autorizar usuario de intranet
+    </h3>
+    @if (validationError) {
+      <div class="d-flex align-items-center gap-3 mb-4" role="alert" style=" background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ validationError }}
+        </span>
+      </div>
+    }
+    <form [formGroup]="userForm" (ngSubmit)="createUser()">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Usuario de intranet
+          </mat-label>
+          <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+            person_search
+          </mat-icon>
+          <input matInput formControlName="userLogin" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Rol
+          </mat-label>
+          <mat-select formControlName="idRole">
+            <mat-option [value]="0">
+              Seleccione un rol
+            </mat-option>
+            @for (role of roles(); track role.idRole) {
+              <mat-option [value]="role.idRole">
+                {{ role.nameRole }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button type="submit" [disabled]="saving() || loadingRoles()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 12px; height: 56px; min-width: 180px; padding: 0 20px; font-weight: 500; flex-shrink: 0; padding-top: 7px;">
+          @if (saving()) {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              <span>
+                Creando...
+              </span>
+            </span>
+          } @else {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2">
+              <mat-icon>
+                person_add_alt
+              </mat-icon>
+              <span>
+                Crear usuario
+              </span>
+            </span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  <div class="d-flex justify-content-end align-items-center gap-2">
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" style="width: 100%; max-width: 320px;">
+      <mat-label>
+        Buscar usuario
+      </mat-label>
+      <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+        person_search
+      </mat-icon>
+      <input matInput [formControl]="searchControl" autocomplete="off" (keyup.enter)="searchUsers()" />
+    </mat-form-field>
+    <button mat-icon-button type="button" matTooltip="Buscar" matTooltipPosition="above" [disabled]="loading()" (click)="searchUsers()" style="width: 44px; height: 44px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 30px;">
+      <mat-icon>
+        search
+      </mat-icon>
+    </button>
+    <button mat-icon-button type="button" matTooltip="Limpiar" matTooltipPosition="above" [disabled]="loading()" (click)="clearSearch()" style="width: 44px; height: 44px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 30px;">
+      <mat-icon>
+        cleaning_services
+      </mat-icon>
+    </button>
+  </div>
+  <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8;">
+    @if (loading()) {
+      <div class="d-flex justify-content-center align-items-center py-5">
+        <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="users()" class="w-100" style="background-color: #fffdf8; min-width: 760px;">
+          <ng-container matColumnDef="userLogin">
+            <th mat-header-cell *matHeaderCellDef class="px-4 py-3" style="color: #4b2e1f; font-weight: 600;">
+              Usuario intranet
+            </th>
+            <td mat-cell *matCellDef="let user" class="px-4 py-3" style="color: #4b2e1f;">
+              {{ user.userLogin }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="userName">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600;">
+              Nombre
+            </th>
+            <td mat-cell *matCellDef="let user" style="color: #4b2e1f;">
+              {{ user.userName }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="nameRole">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600;">
+              Rol
+            </th>
+            <td mat-cell *matCellDef="let user" style="color: #4b2e1f;">
+              {{ user.nameRole }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="statusUser">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600;">
+              Estado
+            </th>
+            <td mat-cell *matCellDef="let user">
+              <span
+                class="
+                  d-inline-flex
+                  align-items-center
+                  rounded-pill
+                  px-3
+                  py-1
+                "
+                [style.background-color]="
+                  user.statusUser
+                    ? '#e8f5e9'
+                    : '#ffebee'
+                "
+                [style.color]="
+                  user.statusUser
+                    ? '#2e7d32'
+                    : '#c62828'
+                "
+                style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  line-height: 1;
+                "
+              >
+                {{ user.statusUser ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="text-center"></th>
+            <td mat-cell *matCellDef="let user" class="text-center">
+              <button mat-stroked-button type="button" (click)="openUpdateModal(user)" [disabled]="updating()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 20px; font-weight: 500;">
+                <mat-icon>
+                  edit
+                </mat-icon>
+                Actualizar
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background-color: #f7e8d8;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        @if (users().length === 0) {
+          <div class="text-center py-5" style="color: #6b4a3a;">
+            No hay usuarios autorizados para mostrar.
+          </div>
+        }
+      </div>
+      <div class="d-flex align-items-center justify-content-end" style="border-top: 1px solid #ebe6e2; color: #4b2e1f; min-height: 64px;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 14px;">
+            Filas por página
+          </span>
+          <button type="button" [matMenuTriggerFor]="pageSizeMenu" [disabled]="loading()" class="paginator-size-button">
+            <span>{{ take() }}</span>
+            <mat-icon>
+              keyboard_arrow_down
+            </mat-icon>
+          </button>
+          <mat-menu #pageSizeMenu="matMenu" class="paginator-size-menu" [overlapTrigger]="false">
+            @for (size of [5, 10, 25, 50]; track size) {
+              <button mat-menu-item type="button" disableRipple (click)="changePageSize(size)" [class.paginator-size-selected]="take() === size">
+                <span>{{ size }}</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+        <div style="font-size: 14px; min-width: 90px; text-align: center;">
+          {{ firstItem }}–{{ lastItem }} of {{ total() }}
+        </div>
+        <button mat-icon-button type="button" matTooltip="Página anterior" matTooltipPosition="above" [disabled]="page() <= 1 || loading()" (click)="previousPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_left
+          </mat-icon>
+        </button>
+        <button mat-icon-button type="button" matTooltip="Página siguiente" matTooltipPosition="above" [disabled]="page() >= pages() || pages() <= 1 || loading()" (click)="nextPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_right
+          </mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+<ng-template #updateUserModal>
+  <div style="background-color: #fffdf8; padding: 28px 32px 24px;">
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <mat-icon style="color: #4b2e1f; font-size: 26px; width: 26px; height: 26px;">
+        edit
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 22px; font-weight: 700;">
+        Actualizar usuario
+      </h2>
+    </div>
+    <p class="mb-4" style=" color: #7a6252; font-size: 15px;">
+      Modifica el rol o estado del usuario autorizado.
+    </p>
+    @if (updateValidationError) {
+      <div class="d-flex align-items-center gap-3 mb-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ updateValidationError }}
+        </span>
+      </div>
+    }
+    <form [formGroup]="updateUserForm" (ngSubmit)="updateUser()">
+      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100 mb-3">
+        <mat-label>
+          Usuario de intranet
+        </mat-label>
+        <input matInput [value]="selectedUser()?.userLogin ?? ''" disabled />
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100 mb-3">
+        <mat-label>
+          Rol
+        </mat-label>
+        <mat-select formControlName="idRole">
+          <mat-option [value]="0">
+            Seleccione un rol
+          </mat-option>
+          @for (role of roles(); track role.idRole) {
+            <mat-option [value]="role.idRole">
+              {{ role.nameRole }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <div class="d-flex align-items-center mb-4">
+        <mat-slide-toggle formControlName="statusUser" style="--mat-sys-primary: #4b2e1f;">
+          {{ updateUserForm.controls.statusUser.value ? 'Activo' : 'Inactivo' }}
+        </mat-slide-toggle>
+      </div>
+      <div class="d-flex justify-content-end align-items-center gap-2">
+        <button mat-stroked-button type="button" (click)="closeUpdateModal()" [disabled]="updating()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 44px; padding: 0 18px; font-weight: 500;">
+          <mat-icon>
+            close
+          </mat-icon>
+          Cancelar
+        </button>
+        <button mat-flat-button type="submit" [disabled]="updating()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; font-weight: 600;">
+          @if (updating()) {
+            <span class="d-flex align-items-center gap-2">
+              <span class="spinner-border spinner-border-sm"></span>
+              Actualizando...
+            </span>
+          } @else {
+            <span class="d-inline-flex align-items-center gap-2 pt-1">
+              <mat-icon>
+                save
+              </mat-icon>
+              <span>
+                Actualizar
+              </span>
+            </span>
+          }
+        </button>
+     </div>
+    </form>
+  </div>
+</ng-template>
