@@ -1,6 +1,6 @@
 import { ResponseModal } from '../common/response-modal/response-modal';
 import { ResponseModalSeverity } from '../models/response-modal.model';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -27,8 +27,7 @@ export class ResponseModalService {
   }
 
   confirm(severity: ResponseModalSeverity, title: string, message: string, confirmButtonText = 'Confirmar'): Observable<boolean | undefined> {
-    return this.dialog
-      .open(ResponseModal, {
+    return this.dialog.open(ResponseModal, {
         width: '100%',
         maxWidth: '440px',
         disableClose: true,
@@ -41,5 +40,19 @@ export class ResponseModalService {
         },
       })
       .afterClosed();
+  }
+
+  showLoading(title: string, message: string): MatDialogRef<ResponseModal, boolean> {
+    return this.dialog.open(ResponseModal, {
+      width: '100%',
+      maxWidth: '440px',
+      disableClose: true,
+      data: {
+        severity: 'info',
+        title,
+        message,
+        loading: true,
+      },
+    });
   }
 }

@@ -1,0 +1,128 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        warehouse
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Configuración Bodegas
+      </h2>
+    </div>
+    <button mat-stroked-button type="button" routerLink="/inventarios/configuracion-bodega/crear" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 16px; font-weight: 500;">
+      <span class="d-inline-flex align-items-center justify-content-center gap-2" style="line-height: 50px;">
+        <mat-icon style="font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+          add_business
+        </mat-icon>
+        <span style="line-height: 50px;">
+          Crear bodega
+        </span>
+      </span>
+    </button>
+  </div>
+  <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8;">
+    @if (loading()) {
+      <div class="d-flex justify-content-center align-items-center py-5">
+        <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="solutionCenters()" class="w-100" style=" background-color: #fffdf8; min-width: 800px;">
+          <ng-container matColumnDef="solutionCenterCode">
+            <th mat-header-cell *matHeaderCellDef class="px-4 py-3" style="color: #4b2e1f; font-weight: 600; min-width: 140px;">
+              Código
+            </th>
+            <td mat-cell *matCellDef="let solutionCenter" class="px-4 py-3" style="color: #4b2e1f;">
+              {{ solutionCenter.solutionCenterCode }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="solutionCenterName">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 260px;">
+              Centro de solución
+            </th>
+            <td mat-cell *matCellDef="let solutionCenter" style="color: #4b2e1f; min-width: 260px;">
+              {{ solutionCenter.solutionCenterName }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="solutionCenterTypeName">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 180px;">
+              Tipo
+            </th>
+            <td mat-cell *matCellDef="let solutionCenter" style="color: #4b2e1f;">
+              {{ solutionCenter.solutionCenterTypeName }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 130px;">
+              Estado
+            </th>
+            <td mat-cell *matCellDef="let solutionCenter">
+              <span class=" d-inline-flex align-items-center rounded-pill px-3 py-1"
+                [style.background-color]="
+                  solutionCenter.isActive
+                    ? '#e8f5e9'
+                    : '#ffebee'
+                "
+                [style.color]="
+                  solutionCenter.isActive
+                    ? '#2e7d32'
+                    : '#c62828'
+                "
+                style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  line-height: 1;
+                "
+              >
+                {{ solutionCenter.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background-color: #f7e8d8;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        @if (solutionCenters().length === 0) {
+          <div class="text-center py-5" style="color: #6b4a3a;">
+            No hay centros de solución para mostrar.
+          </div>
+        }
+      </div>
+      <div class="d-flex flex-wrap align-items-center justify-content-end gap-1 px-3" style="border-top: 1px solid #ebe6e2; color: #4b2e1f; min-height: 64px;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 14px; white-space: nowrap;">
+            Filas por página
+          </span>
+          <button type="button" [matMenuTriggerFor]="pageSizeMenu" [disabled]="loading()" class="paginator-size-button">
+            <span>
+              {{ take() }}
+            </span>
+            <mat-icon>
+              keyboard_arrow_down
+            </mat-icon>
+          </button>
+          <mat-menu #pageSizeMenu="matMenu" class="paginator-size-menu" [overlapTrigger]="false">
+            @for (size of [5, 10, 25, 50]; track size) {
+              <button mat-menu-item type="button" disableRipple (click)="changePageSize(size)" [class.paginator-size-selected]="take() === size">
+                <span>
+                  {{ size }}
+                </span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+        <div style="font-size: 14px; min-width: 90px; text-align: center; white-space: nowrap;">
+          {{ firstItem }}–{{ lastItem }} of {{ total() }}
+        </div>
+        <button mat-icon-button type="button" matTooltip="Página anterior" matTooltipPosition="above" [disabled]="page() <= 1 || loading()" (click)="previousPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_left
+          </mat-icon>
+        </button>
+        <button mat-icon-button type="button" matTooltip="Página siguiente" matTooltipPosition="above" [disabled]="page() >= pages() || pages() <= 1 || loading()" (click)="nextPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_right
+          </mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+</div>

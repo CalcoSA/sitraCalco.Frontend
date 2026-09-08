@@ -1,5 +1,6 @@
 import { ResponseModalData, ResponseModalSeverity, ModalConfig } from '../../models/response-modal.model';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Component, inject } from '@angular/core';
@@ -8,6 +9,7 @@ import { Component, inject } from '@angular/core';
   selector: 'app-response-modal',
   standalone: true,
   imports: [
+    MatProgressSpinnerModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule

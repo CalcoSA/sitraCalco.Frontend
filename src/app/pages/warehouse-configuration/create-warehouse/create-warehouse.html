@@ -1,0 +1,106 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        add_business
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Crear bodega
+      </h2>
+    </div>
+    <button mat-stroked-button type="button" (click)="goBack()" [disabled]="saving()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 16px; font-weight: 500;">
+      <span class="d-inline-flex align-items-center justify-content-center gap-2" style="line-height: 50px;">
+        <mat-icon style="font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+          arrow_back
+        </mat-icon>
+        <span style="line-height: 50px;">
+          Regresar
+        </span>
+      </span>
+    </button>
+  </div>
+  <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+    <h3 class="mb-4" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+      Información del centro de solución
+    </h3>
+    @if (validationError) {
+      <div class="d-flex align-items-center gap-3 mb-4" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ validationError }}
+        </span>
+      </div>
+    }
+    @if (loadingTypes()) {
+      <div class="d-flex justify-content-center align-items-center py-4">
+        <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+      </div>
+    } @else {
+      <form [formGroup]="solutionCenterForm" (ngSubmit)="createSolutionCenter()">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="min-width: 220px;">
+            <mat-label>
+              Tipo
+            </mat-label>
+            <mat-select formControlName="solutionCenterTypeId">
+              <mat-option [value]="0">
+                Seleccione un tipo
+              </mat-option>
+              @for (type of solutionCenterTypes(); track type.solution_center_type_id) {
+                <mat-option [value]="type.solution_center_type_id">
+                  {{ type.solution_center_type_name }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="min-width: 180px;">
+            <mat-label>
+              Código
+            </mat-label>
+            <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+              tag
+            </mat-icon>
+            <input matInput formControlName="solutionCenterCode" autocomplete="off" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="min-width: 280px;">
+            <mat-label>
+              Nombre
+            </mat-label>
+            <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+              warehouse
+            </mat-icon>
+            <input matInput formControlName="solutionCenterName" autocomplete="off" />
+          </mat-form-field>
+          <div class="d-flex align-items-center gap-2" style="flex-shrink: 0;">
+            <button mat-stroked-button type="submit" [disabled]="saving() || loadingTypes()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 12px; height: 56px; min-width: 150px; padding: 0 20px; font-weight: 500;">
+              @if (saving()) {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>
+                      Agregando...
+                    </span>
+                </span>
+              } @else {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                  <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                    add_business
+                  </mat-icon>
+                  <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                    Agregar
+                  </span>
+                </span>
+              }
+            </button>
+            <button mat-icon-button type="button" matTooltip="Limpiar" matTooltipPosition="above" [disabled]="saving() || loadingTypes()" (click)="clearForm()" style="width: 48px; height: 48px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 50%; flex-shrink: 0;">
+              <mat-icon>
+                cleaning_services
+              </mat-icon>
+            </button>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</div>
