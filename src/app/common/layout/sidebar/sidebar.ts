@@ -93,6 +93,10 @@ export class Sidebar {
   getMenuIcon(name: string): string {
     const value = name.toLowerCase();
 
+    if (value.includes('bodega')) {
+      return 'warehouse';
+    }
+
     if (value.includes('config')) {
       return 'settings';
     }
@@ -103,6 +107,14 @@ export class Sidebar {
 
     if (value.includes('rol')) {
       return 'admin_panel_settings';
+    }
+
+    if (value.includes('inventario')) {
+      return 'inventory';
+    }
+
+    if (value.includes('producto')) {
+      return 'cookie';
     }
 
     return 'dashboard_customize';

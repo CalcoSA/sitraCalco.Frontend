@@ -11,6 +11,7 @@ export interface ResponseModalData {
   buttonText?: string;
   confirmButtonText?: string;
   confirm?: boolean;
+  loading?: boolean;
 }
 
 export interface ModalConfig {
