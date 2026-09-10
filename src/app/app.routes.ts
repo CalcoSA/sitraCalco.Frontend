@@ -36,6 +36,10 @@ export const routes: Routes = [
         path: 'inventarios/configuracion-bodega/crear',
         loadComponent: () => import('./pages/warehouse-configuration/create-warehouse/create-warehouse').then(module => module.CreateWarehouse),
       },
+      {
+        path: 'inventarios/configuracion-bodega/editar/:solutionCenterId',
+        loadComponent: () => import('./pages/warehouse-configuration/update-warehouse/update-warehouse').then(module => module.UpdateWarehouse),
+      },
     ],
   },
   {

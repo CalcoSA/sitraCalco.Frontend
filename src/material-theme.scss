@@ -214,6 +214,87 @@ html {
   background-color: #e8dfd7 !important;
 }
 
+/* =========================================================
+   AUTOCOMPLETE - BÚSQUEDA DE PRODUCTOS
+   ========================================================= */
+
+.mat-mdc-autocomplete-panel.product-autocomplete-panel {
+  background-color: #fffdf8 !important;
+  border: 1px solid #e0cdbb !important;
+  border-top: 0 !important;
+  border-radius: 0 0 16px 16px !important;
+  max-height: 290px !important;
+  padding: 4px 0 !important;
+  box-shadow: 0 8px 18px rgba(75, 46, 31, 0.16) !important;
+}
+
+/* OPCIÓN */
+.product-autocomplete-panel
+.mat-mdc-option {
+  min-height: 64px !important;
+  padding: 8px 16px !important;
+  background-color: #fffdf8 !important;
+  color: #4b2e1f !important;
+  border-bottom: 1px solid #f1ebe5;
+  font-family: inherit;
+}
+
+/* ÚLTIMA OPCIÓN SIN LÍNEA */
+.product-autocomplete-panel
+.mat-mdc-option:last-child {
+  border-bottom: 0;
+}
+
+/* HOVER */
+.product-autocomplete-panel
+.mat-mdc-option:hover:not(.mdc-list-item--disabled) {
+  background-color: #f7f3ef !important;
+}
+
+/* OPCIÓN ACTIVA POR TECLADO / MOUSE */
+.product-autocomplete-panel
+.mat-mdc-option.mat-mdc-option-active {
+  background-color: #f7f3ef !important;
+}
+
+/* OPCIÓN SELECCIONADA */
+.product-autocomplete-panel
+.mat-mdc-option.mdc-list-item--selected {
+  background-color: #f1ebe5 !important;
+}
+
+/* SELECCIONADA + HOVER */
+.product-autocomplete-panel
+.mat-mdc-option.mdc-list-item--selected:hover {
+  background-color: #e8dfd7 !important;
+}
+
+/* TEXTO */
+.product-autocomplete-panel
+.mat-mdc-option
+.mdc-list-item__primary-text {
+  width: 100%;
+  color: #4b2e1f !important;
+}
+
+/* SCROLL */
+.product-autocomplete-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.product-autocomplete-panel::-webkit-scrollbar-track {
+  background-color: #fffdf8;
+}
+
+.product-autocomplete-panel::-webkit-scrollbar-thumb {
+  background-color: #b7aaa0;
+  border-radius: 8px;
+}
+
+.product-autocomplete-panel::-webkit-scrollbar-thumb:hover {
+  background-color: #8b6a55;
+}
+
 body {
   // Default the application to a light color theme. This can be changed to
   // `dark` to enable the dark color theme, or to `light dark` to defer to the
