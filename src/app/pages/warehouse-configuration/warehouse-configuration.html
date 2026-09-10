@@ -37,7 +37,7 @@
           </ng-container>
           <ng-container matColumnDef="solutionCenterName">
             <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 260px;">
-              Centro de solución
+              Bodega
             </th>
             <td mat-cell *matCellDef="let solutionCenter" style="color: #4b2e1f; min-width: 260px;">
               {{ solutionCenter.solutionCenterName }}
@@ -77,12 +77,38 @@
               </span>
             </td>
           </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef style="width: 170px; min-width: 170px;"></th>
+            <td mat-cell *matCellDef="let solutionCenter" style="width: 170px; min-width: 170px;">
+              <div class="d-flex align-items-center justify-content-end gap-1">
+                <button mat-icon-button type="button" matTooltip="Actualizar estado" matTooltipPosition="above" [disabled]="updatingStatusId() !== null" (click)="updateStatus(solutionCenter)" style="width: 40px; height: 40px; color: #4b2e1f;">
+                  @if (updatingStatusId() === solutionCenter.solutionCenterId) {
+                    <mat-spinner diameter="20" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+                  } @else {
+                    <mat-icon>
+                      sync_alt
+                    </mat-icon>
+                  }
+                </button>
+                <button mat-icon-button type="button" matTooltip="Visualizar" matTooltipPosition="above" [disabled]="loading() || updatingStatusId() !== null" (click)="openViewModal(solutionCenter)" style="width: 40px; height: 40px; color: #4b2e1f;">
+                  <mat-icon>
+                    visibility
+                  </mat-icon>
+                </button>
+                <button mat-icon-button type="button" matTooltip="Editar" matTooltipPosition="above" [routerLink]="['/inventarios/configuracion-bodega/editar', solutionCenter.solutionCenterId]" style="width: 40px; height: 40px; color: #4b2e1f;">
+                  <mat-icon>
+                    edit
+                  </mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background-color: #f7e8d8;"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
         @if (solutionCenters().length === 0) {
           <div class="text-center py-5" style="color: #6b4a3a;">
-            No hay centros de solución para mostrar.
+            No hay bodegas para mostrar.
           </div>
         }
       </div>
@@ -126,3 +152,204 @@
     }
   </div>
 </div>
+
+<ng-template #viewSolutionCenterModal>
+  <div style="background-color: #fffdf8; overflow: hidden;">
+    <div mat-dialog-title class="d-flex align-items-center gap-2 mt-2" style="color: #4b2e1f; font-size: 21px; font-weight: 600;">
+      <mat-icon>
+        visibility
+      </mat-icon>
+      <span>
+        Visualizar bodega
+      </span>
+    </div>
+    <mat-dialog-content style="padding-top: 8px; max-height: 68vh; overflow-y: auto;">
+      @if (loadingDetail()) {
+        <div class="d-flex flex-column justify-content-center align-items-center gap-3 py-5">
+          <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+          <span style="color: #7a6252; font-size: 14px;">
+            Consultando configuración...
+          </span>
+        </div>
+      } @else if (solutionCenterDetail(); as detail) {
+        <div style="border: 1px solid #e0cdbb; border-radius: 16px; background-color: #fffaf5; padding: 18px; margin-bottom: 22px;">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <div style="color: #8b6a55; font-size: 13px; margin-bottom: 3px;">
+                Bodega
+              </div>
+              <div style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+                {{ detail.solutionCenterName }}
+              </div>
+            </div>
+            <div>
+              <div style="color: #8b6a55; font-size: 13px; margin-bottom: 3px;">
+                Código
+              </div>
+              <div style="color: #4b2e1f; font-weight: 500;">
+                {{ detail.solutionCenterCode }}
+              </div>
+            </div>
+            <div>
+              <div style="color: #8b6a55; font-size: 13px; margin-bottom: 3px;">
+                Tipo
+              </div>
+              <div style="color: #4b2e1f; font-weight: 500;">
+                {{ detail.solutionCenterTypeName }}
+              </div>
+            </div>
+            <span
+              class="
+                d-inline-flex
+                align-items-center
+                rounded-pill
+                px-3
+                py-1
+              "
+              [style.background-color]="
+                detail.isActive
+                  ? '#e8f5e9'
+                  : '#ffebee'
+              "
+              [style.color]="
+                detail.isActive
+                  ? '#2e7d32'
+                  : '#c62828'
+              "
+              style="
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 1;
+              "
+            >
+              {{ detail.isActive ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <mat-icon style="color: #4b2e1f;">
+            shelves
+          </mat-icon>
+          <span style="color: #4b2e1f; font-size: 17px; font-weight: 600;">
+            Secciones
+          </span>
+          <span style="color: #8b6a55; font-size: 14px;">
+            ({{ detail.sections.length }})
+          </span>
+        </div>
+        @if (detail.sections.length === 0) {
+          <div class="d-flex flex-column align-items-center justify-content-center text-center py-5" style="border: 1px solid #e0cdbb; border-radius: 16px; color: #8b6a55;">
+            <mat-icon style="font-size: 38px; width: 38px; height: 38px; margin-bottom: 8px;">
+              shelves
+            </mat-icon>
+            <span>
+              Esta bodega no tiene secciones configuradas.
+            </span>
+          </div>
+        } @else {
+          <mat-accordion multi class="d-flex flex-column">
+            @for (section of detail.sections; track section.sectionId) {
+              <mat-expansion-panel style="box-shadow: none; border: 1px solid #e0cdbb; border-radius: 14px; background-color: #fffdf8; margin-bottom: 10px; overflow: hidden;">
+                <mat-expansion-panel-header style="min-height: 64px;">
+                  <mat-panel-title>
+                    <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+                      <mat-icon style="color: #8b6a55; flex-shrink: 0;">
+                        shelves
+                      </mat-icon>
+                      <span style="color: #4b2e1f; font-weight: 600; overflow: hidden; text-overflow: ellipsis;">
+                        {{ section.sectionName }}
+                      </span>
+                    </div>
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    <div class="d-flex align-items-center justify-content-end gap-2 w-100">
+                      <span style="color: #8b6a55; font-size: 13px; white-space: nowrap;">
+                        {{ section.products.length }} producto(s)
+                      </span>
+                      <span
+                        class="
+                          rounded-pill
+                          px-2
+                          py-1
+                        "
+                        [style.background-color]="
+                          section.isActive
+                            ? '#e8f5e9'
+                            : '#ffebee'
+                        "
+                        [style.color]="
+                          section.isActive
+                            ? '#2e7d32'
+                            : '#c62828'
+                        "
+                        style="
+                          font-size: 12px;
+                          line-height: 1;
+                        "
+                      >
+                        {{ section.isActive ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </div>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+                @if (section.products.length === 0) {
+                  <div class="text-center py-4" style="color: #8b6a55;">
+                    Esta sección no tiene productos.
+                  </div>
+                } @else {
+                  <div class="d-flex flex-column pb-3">
+                    @for (product of section.products; track product.solutionCenterProductId; let last = $last) {
+                      <div class="row align-items-center mx-0" [style.margin-bottom]="last ? '0' : '8px'" style="border: 1px solid #ebe1d8; border-radius: 12px; background-color: #fffaf5; padding: 7px 10px; min-height: 56px;">
+                        <div class="col-2 col-md-1 text-center">
+                          <div class="d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; background-color: #f7e8d8; color: #4b2e1f; font-weight: 700; font-size: 14px;">
+                            {{ product.sortOrder }}
+                          </div>
+                        </div>
+                        <div class="col-10 col-md-2">
+                          <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 16px;">
+                            Referencia
+                          </small>
+                          <span style="color: #4b2e1f; font-weight: 500; line-height: 18px;">
+                            {{ product.reference }}
+                          </span>
+                        </div>
+                        <div class="col-12 col-md-5">
+                          <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 16px;">
+                            Producto
+                          </small>
+                          <span style="display: block; color: #4b2e1f; font-weight: 500; line-height: 18px;">
+                            {{ product.productName }}
+                          </span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                          <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 16px;">
+                            Unidad de medida
+                          </small>
+                          <span style="display: block; color: #4b2e1f; line-height: 18px;">
+                            {{ product.unitOfMeasure }}
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        }
+      }
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" class="px-4 pb-3 pt-2">
+      <button mat-flat-button type="button" (click)="closeViewModal()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; width: 130px; height: 44px; padding: 0 18px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">
+        <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 44px; line-height: 1;">
+          <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+            close
+          </mat-icon>
+          <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+            Cerrar
+          </span>
+        </span>
+      </button>
+    </mat-dialog-actions>
+  </div>
+</ng-template>

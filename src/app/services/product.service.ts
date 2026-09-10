@@ -1,4 +1,4 @@
-import { Product, ProductSyncResult  } from '../models/product.model';
+import { Product, ProductSyncResult, ProductSearchResult } from '../models/product.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ApiResponse } from '../models/api-response.model';
 import { PagedResult } from '../models/pagination.model';
@@ -26,6 +26,14 @@ export class ProductService {
     }
 
     return this.http.get<ApiResponse<PagedResult<Product>>>(`${apiConfig.inventoryBaseUrl}/Product`, { params });
+  }
+
+  searchProduct(search: string, take: number = 20): Observable<ApiResponse<ProductSearchResult[]>> {
+    const params = new HttpParams()
+      .set('search', search.trim())
+      .set('take', take);
+
+    return this.http.get<ApiResponse<ProductSearchResult[]>>(`${apiConfig.inventoryBaseUrl}/Product/search`, { params });
   }
 
   syncProducts(): Observable<ApiResponse<ProductSyncResult>> {

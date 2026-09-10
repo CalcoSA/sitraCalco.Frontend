@@ -10,3 +10,11 @@ export interface Product {
 export interface ProductSyncResult {
   processed: number;
 }
+
+export interface ProductSearchResult {
+  productId: number;
+  productName: string;
+  reference: string;
+  unitOfMeasure: string;
+  planId: string | null;
+}

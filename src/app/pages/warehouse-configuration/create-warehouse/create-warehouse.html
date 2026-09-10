@@ -21,7 +21,7 @@
   </div>
   <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
     <h3 class="mb-4" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
-      Información del centro de solución
+      Información de la bodega
     </h3>
     @if (validationError) {
       <div class="d-flex align-items-center gap-3 mb-4" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
@@ -103,4 +103,521 @@
       </form>
     }
   </div>
+  @if (createdSolutionCenterId()) {
+    <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+          <h3 class="mb-1" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+            Configuración de sección
+          </h3>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button mat-flat-button type="button" (click)="saveSection()" [disabled]="savingSection()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 44px; min-width: 200px; padding: 0 18px; font-weight: 600;">
+            @if (savingSection()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Guardando...
+                </span>
+              </span>
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                  save
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Guardar configuración
+                </span>
+              </span>
+            }
+          </button>
+          <button mat-icon-button type="button" matTooltip="Limpiar configuración" matTooltipPosition="above" [disabled]="savingSection()" (click)="clearSection()" style="width: 44px; height: 44px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 50%; flex-shrink: 0;">
+            <mat-icon>
+              cleaning_services
+            </mat-icon>
+          </button>
+        </div>
+      </div>
+      @if (sectionValidationError) {
+        <div class="d-flex align-items-center gap-3 mb-4" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+          <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+            warning_amber
+          </mat-icon>
+          <span>
+            {{ sectionValidationError }}
+          </span>
+        </div>
+      }
+      <form [formGroup]="sectionForm" (ngSubmit)="saveSection()">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mb-4">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+            <mat-label>
+              Nombre de la sección
+            </mat-label>
+            <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+              shelves
+            </mat-icon>
+            <input matInput formControlName="sectionName" autocomplete="off" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+            <mat-label>
+              Buscar producto
+            </mat-label>
+            <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+              search
+            </mat-icon>
+            <input matInput [formControl]="productSearchControl" [matAutocomplete]="productAutocomplete" autocomplete="off" />
+            @if (searchingProducts()) {
+              <mat-spinner matSuffix diameter="22" style="--mat-sys-primary: #4b2e1f; margin-right: 8px;"></mat-spinner>
+            }
+            <mat-autocomplete #productAutocomplete="matAutocomplete" class="product-autocomplete-panel" [displayWith]="displayProduct" (optionSelected)="addProduct($event.option.value)">
+              @for (product of productResults(); track product.productId) {
+                <mat-option [value]="product">
+                  <div class="d-flex flex-column justify-content-center" style="width: 100%;">
+                    <span style="color: #4b2e1f; font-weight: 500; line-height: 20px;">
+                      {{ product.productName }}
+                    </span>
+                    <small style="color: #8b6a55; line-height: 18px;">
+                      {{ product.reference }} · {{ product.unitOfMeasure }}
+                    </small>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <div style="border: 1px solid #e0cdbb; border-radius: 18px; background-color: #fffaf5; overflow: hidden;">
+          <div class="d-flex justify-content-between align-items-center" style="padding: 18px 18px 14px; border-bottom: 1px solid #ebe1d8;">
+            <div class="d-flex align-items-center gap-2">
+              <mat-icon style="color: #4b2e1f;">
+                egg
+              </mat-icon>
+              <span style="color: #4b2e1f; font-weight: 600; font-size: 16px;">
+                Productos agregados
+              </span>
+            </div>
+            <span style="color: #7a6252; font-size: 14px;">
+              {{ selectedProducts().length }} producto(s)
+            </span>
+          </div>
+          <div style="height: 300px; overflow-y: auto; padding: 16px 18px;">
+            @if (selectedProducts().length === 0) {
+              <div class="d-flex flex-column align-items-center justify-content-center text-center h-100" style="color: #8b6a55;">
+                <mat-icon style="font-size: 40px; width: 40px; height: 40px; margin-bottom: 8px;">
+                  egg
+                </mat-icon>
+                <span>
+                  Aún no has agregado productos.
+                </span>
+              </div>
+            } @else {
+              <div class="d-flex flex-column gap-2">
+                @for (product of selectedProducts(); track product.productId) {
+                  <div class="d-flex flex-column flex-md-row align-items-md-center gap-3" style="border: 1px solid #ebe1d8; border-radius: 14px; background-color: #fffdf8; padding: 14px 16px;">
+                    <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px; border-radius: 50%; background-color: #f7e8d8; color: #4b2e1f; font-weight: 700; margin-right: 30px;">
+                      {{ product.sortOrder }}
+                    </div>
+                    <div style="min-width: 180px;">
+                      <small style="display: block; color: #8b6a55;">
+                        Referencia
+                      </small>
+                      <span style="color: #4b2e1f; font-weight: 500;">
+                        {{ product.reference }}
+                      </span>
+                    </div>
+                    <div style="flex: 1 1 180px;">
+                      <small style="display: block; color: #8b6a55;">
+                        Producto
+                      </small>
+                      <span style="color: #4b2e1f; font-weight: 500;">
+                        {{ product.productName }}
+                      </span>
+                    </div>
+                    <div style="flex: 1 1 180px;">
+                      <small style="display: block; color: #8b6a55;">
+                        Unidad de medida
+                      </small>
+                      <span style="color: #4b2e1f;">
+                        {{ product.unitOfMeasure }}
+                      </span>
+                    </div>
+                    <button mat-icon-button type="button" matTooltip="Eliminar producto" matTooltipPosition="above" [disabled]="savingSection()" (click)="removeProduct(product.productId)" style="width: 42px; height: 42px; color: #c62828; flex-shrink: 0;">
+                      <mat-icon>
+                        delete_outline
+                      </mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </form>
+      @if (loadingSections()) {
+
+  <div
+    class="d-flex justify-content-center align-items-center mt-4 py-4"
+  >
+    <mat-spinner
+      diameter="38"
+      style="--mat-sys-primary: #4b2e1f;"
+    >
+    </mat-spinner>
+  </div>
+
+} @else if (savedSections().length > 0) {
+
+  <div class="mt-4">
+
+    <div
+      class="d-flex align-items-center gap-2 mb-3"
+    >
+      <mat-icon
+        style="
+          color: #4b2e1f;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        "
+      >
+        inventory_2
+      </mat-icon>
+
+      <h3
+        class="m-0"
+        style="
+          color: #4b2e1f;
+          font-size: 18px;
+          font-weight: 600;
+        "
+      >
+        Secciones creadas
+      </h3>
+    </div>
+
+
+    <mat-accordion>
+
+      @for (
+        section of savedSections();
+        track section.sectionId
+      ) {
+
+        <mat-expansion-panel
+          style="
+            background-color: #fffdf8;
+            border: 1px solid #e0cdbb;
+            border-radius: 14px;
+            box-shadow: none;
+            margin-bottom: 10px;
+          "
+        >
+
+          <mat-expansion-panel-header
+            style="
+              min-height: 64px;
+            "
+          >
+
+            <mat-panel-title>
+
+              <div
+                class="d-flex align-items-center gap-3"
+              >
+
+                <div
+                  class="
+                    d-flex
+                    align-items-center
+                    justify-content-center
+                  "
+                  style="
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    background-color: #f7e8d8;
+                    color: #4b2e1f;
+                    flex-shrink: 0;
+                  "
+                >
+                  <mat-icon
+                    style="
+                      font-size: 21px;
+                      width: 21px;
+                      height: 21px;
+                    "
+                  >
+                    shelves
+                  </mat-icon>
+                </div>
+
+                <div
+                  class="d-flex flex-column"
+                >
+                  <span
+                    style="
+                      color: #4b2e1f;
+                      font-weight: 600;
+                    "
+                  >
+                    {{ section.sectionName }}
+                  </span>
+
+                  <small
+                    style="
+                      color: #8b6a55;
+                    "
+                  >
+                    {{ section.products.length }}
+                    producto(s)
+                  </small>
+                </div>
+
+              </div>
+
+            </mat-panel-title>
+
+
+            <mat-panel-description
+              class="
+                d-flex
+                justify-content-end
+                align-items-center
+              "
+            >
+
+              <span
+                class="
+                  d-inline-flex
+                  align-items-center
+                  rounded-pill
+                  px-3
+                  py-1
+                "
+                [style.background-color]="
+                  section.isActive
+                    ? '#e8f5e9'
+                    : '#ffebee'
+                "
+                [style.color]="
+                  section.isActive
+                    ? '#2e7d32'
+                    : '#c62828'
+                "
+                style="
+                  font-size: 13px;
+                  font-weight: 500;
+                  line-height: 1;
+                "
+              >
+                {{
+                  section.isActive
+                    ? 'Activo'
+                    : 'Inactivo'
+                }}
+              </span>
+
+            </mat-panel-description>
+
+          </mat-expansion-panel-header>
+
+
+          <div
+            style="
+              border-top: 1px solid #ebe1d8;
+              padding-top: 14px;
+              max-height: 320px;
+              overflow-y: auto;
+            "
+          >
+
+            @if (section.products.length === 0) {
+
+              <div
+                class="text-center py-4"
+                style="
+                  color: #8b6a55;
+                "
+              >
+                Esta sección no tiene productos.
+              </div>
+
+            } @else {
+
+              <div
+                class="d-flex flex-column gap-2"
+              >
+
+                @for (
+                  product of section.products;
+                  track product.solutionCenterProductId
+                ) {
+
+                  <div
+                    style="
+                      border: 1px solid #ebe1d8;
+                      border-radius: 12px;
+                      background-color: #fffaf5;
+                      padding: 12px 16px;
+                    "
+                  >
+
+                    <div
+                      class="
+                        row
+                        align-items-center
+                        g-3
+                      "
+                    >
+
+                      <!-- ORDEN -->
+                      <div
+                        class="col-2 col-md-1"
+                      >
+
+                        <div
+                          class="
+                            d-flex
+                            align-items-center
+                            justify-content-center
+                          "
+                          style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background-color: #f7e8d8;
+                            color: #4b2e1f;
+                            font-weight: 700;
+                          "
+                        >
+                          {{ product.sortOrder }}
+                        </div>
+
+                      </div>
+
+
+                      <!-- REFERENCIA -->
+                      <div
+                        class="col-10 col-md-2"
+                      >
+
+                        <small
+                          style="
+                            display: block;
+                            color: #8b6a55;
+                          "
+                        >
+                          Referencia
+                        </small>
+
+                        <span
+                          style="
+                            color: #4b2e1f;
+                            font-weight: 500;
+                          "
+                        >
+                          {{ product.reference }}
+                        </span>
+
+                      </div>
+
+
+                      <!-- PRODUCTO -->
+                      <div
+                        class="col-12 col-md-5"
+                      >
+
+                        <small
+                          style="
+                            display: block;
+                            color: #8b6a55;
+                          "
+                        >
+                          Producto
+                        </small>
+
+                        <span
+                          style="
+                            color: #4b2e1f;
+                            font-weight: 500;
+                          "
+                        >
+                          {{ product.productName }}
+                        </span>
+
+                      </div>
+
+
+                      <!-- UNIDAD -->
+                      <div
+                        class="col-8 col-md-3"
+                      >
+
+                        <small
+                          style="
+                            display: block;
+                            color: #8b6a55;
+                          "
+                        >
+                          Unidad de medida
+                        </small>
+
+                        <span
+                          style="
+                            color: #4b2e1f;
+                          "
+                        >
+                          {{ product.unitOfMeasure }}
+                        </span>
+
+                      </div>
+
+
+                      <!-- PLAN -->
+                      <div
+                        class="col-4 col-md-1"
+                      >
+
+                        <small
+                          style="
+                            display: block;
+                            color: #8b6a55;
+                          "
+                        >
+                          Plan
+                        </small>
+
+                        <span
+                          style="
+                            color: #4b2e1f;
+                          "
+                        >
+                          {{ product.planId || '—' }}
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                }
+
+              </div>
+
+            }
+
+          </div>
+
+        </mat-expansion-panel>
+
+      }
+
+    </mat-accordion>
+
+  </div>
+
+}
+    </div>
+  }
 </div>
