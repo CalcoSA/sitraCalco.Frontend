@@ -1,17 +1,22 @@
-<header class="h-100 d-flex align-items-center justify-content-between px-5" style=" background-color: #f7e8d8; border-bottom: 1px solid #c9a98e;">
-  <div class="d-flex align-items-center gap-3">
-    <mat-icon style=" color: #4b2e1f; font-size: 42px; width: 42px; height: 42px;">
+<header class="h-100 d-flex align-items-center justify-content-between px-2 px-md-4 px-lg-5 gap-2" style="background-color: #f7e8d8; border-bottom: 1px solid #c9a98e;">
+  <div class="d-flex align-items-center gap-2 gap-md-3 overflow-hidden" style="min-width: 0;">
+    <mat-icon class="flex-shrink-0" style="color: #4b2e1f; font-size: 42px; width: 42px; height: 42px;">
       coffee
     </mat-icon>
-    <h1 class="m-0" style="color: #4b2e1f; font-size: 20px; font-weight: 600;">
+    <h1 class="m-0 d-none d-md-block text-nowrap" style="color: #4b2e1f; font-size: 20px; font-weight: 600;">
       BIENVENIDO A SITRA CALCO S.A
     </h1>
+    <h1 class="m-0 d-md-none" style="color: #4b2e1f; font-size: 17px; line-height: 20px; font-weight: 600;">
+      BIENVENIDO A<br>
+      SITRA CALCO S.A
+    </h1>
   </div>
-  <button mat-stroked-button type="button" (click)="logout()" style="border-color: #8B6A55; color: #4B2E1F; background-color: rgba(255,255,255,0.35); min-height: 36px; border-radius: 12px; padding: 0 20px; font-weight: 500;">
+  <button mat-stroked-button type="button" (click)="logout()" class="flex-shrink-0" style="border-color: #8B6A55; color: #4B2E1F; background-color: rgba(255,255,255,0.35); min-height: 36px; border-radius: 12px; padding: 0 20px; font-weight: 500;">
     <mat-icon>
       logout
     </mat-icon>
-    Cerrar Sesión
+    <span class="d-none d-sm-inline">
+      Cerrar Sesión
+    </span>
   </button>
 </header>
-

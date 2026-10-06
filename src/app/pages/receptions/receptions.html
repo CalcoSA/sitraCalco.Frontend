@@ -1,0 +1,223 @@
+<style>
+  .reception-input {
+    color: #4b2e1f !important;
+    caret-color: #4b2e1f !important;
+  }
+  .reception-input::placeholder {
+    color: #4b2e1f !important;
+    opacity: 1 !important;
+  }
+</style>
+
+<div class="d-flex flex-column gap-3">
+  <div class="d-flex align-items-start gap-2 flex-wrap">
+    <div style="width: 100%; max-width: 350px;">
+      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+        <mat-label>
+          Tipo de recepción
+        </mat-label>
+        <input matInput class="reception-input" type="text" autocomplete="off" placeholder="Seleccione..." [formControl]="receptionTypeControl" [matAutocomplete]="receptionTypeAutocomplete" />
+        @if (loadingReceptionTypes()) {
+          <mat-spinner matSuffix [diameter]="18" style="margin-right: 8px; --mat-sys-primary: #4b2e1f;"></mat-spinner>
+        }
+        <mat-autocomplete #receptionTypeAutocomplete="matAutocomplete" [displayWith]="displayReceptionType" (optionSelected)="selectReceptionType($event.option.value)">
+          @for (receptionType of receptionTypes(); track receptionType.reception_type_id) {
+            <mat-option [value]="receptionType" style="height: 42px; min-height: 42px;">
+              {{ receptionType.name }}
+              @if (receptionType.form_code) { - {{ receptionType.form_code }} }
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+    <button mat-icon-button type="button" matTooltip="Limpiar recepción" matTooltipPosition="above" (click)="clearReception()" style="margin-top: 2px; width: 40px; height: 40px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 30px; flex-shrink: 0;">
+      <mat-icon>
+        cleaning_services
+      </mat-icon>
+    </button>
+    <button mat-flat-button type="button" style=" margin-left: auto; background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+      <mat-icon>check_circle</mat-icon>
+      Terminar
+    </button>
+  </div>
+  @if (selectedReceptionType) {
+    <fieldset style="width: 100%; border: 1px solid #cfc5be; border-radius: 16px; padding: 20px; margin: 4px 0 0 0; min-width: 0;">
+      <legend style="float: none; width: auto; padding: 0 10px; margin: 0; color: #4b2e1f; font-size: 14px; font-weight: 400;">
+        {{ selectedReceptionType.form_code }}
+      </legend>
+      <div class="d-flex align-items-center gap-3 flex-wrap" style="width: 100%; margin-bottom: 24px;">
+        <div style="width: 100%; max-width: 350px;">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>
+              Proveedor
+            </mat-label>
+            <input matInput class="reception-input" type="text" autocomplete="off" placeholder="Seleccione..." [formControl]="supplierControl" [matAutocomplete]="supplierAutocomplete" />
+            @if (loadingSuppliers()) {
+              <mat-spinner matSuffix [diameter]="18" style="margin-right: 8px; --mat-sys-primary: #4b2e1f;"></mat-spinner>
+            }
+            <mat-autocomplete #supplierAutocomplete="matAutocomplete" [displayWith]="displaySupplier" (optionSelected)="selectSupplier($event.option.value)">
+              @for (supplier of suppliers(); track supplier.supplier_id) {
+                <mat-option [value]="supplier" style="height: 42px; min-height: 42px;">
+                  {{ supplier.supplier_code }} - {{ supplier.name }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <button mat-stroked-button type="button" style="margin-left: auto; min-height: 40px; padding: 0 18px; color: #4b2e1f; border-color: #8b6a55; border-radius: 10px; font-weight: 500;">
+          <mat-icon>add</mat-icon>
+          Agregar
+        </button>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-3" style="width: 100%; justify-content: space-between;">
+        <div style="flex: 1 1 350px; max-width: 350px; min-width: 0;">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>
+              Producto
+            </mat-label>
+            <input matInput class="reception-input" type="text" autocomplete="off" placeholder="Seleccione..." [formControl]="productControl" [matAutocomplete]="productAutocomplete" />
+            @if (loadingProducts()) {
+              <mat-spinner matSuffix [diameter]="18" style="margin-right: 8px; --mat-sys-primary: #4b2e1f;"></mat-spinner>
+            }
+            <mat-autocomplete #productAutocomplete="matAutocomplete" [displayWith]="displayProduct" (optionSelected)="selectProduct($event.option.value)">
+              @for (product of products(); track product.product_id) {
+                <mat-option [value]="product" style="height: 42px; min-height: 42px;">
+                  {{ product.product_reference.trim() }} - {{ product.product_name }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <div style="flex: 1 1 250px; min-width: 220px;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>
+              Número de guía
+            </mat-label>
+            <input matInput class="reception-input" type="text" autocomplete="off" [formControl]="guideNumberControl" />
+          </mat-form-field>
+        </div>
+        <div class="d-flex flex-column justify-content-center" style="flex: 1 1 260px; min-width: 250px; height: 56px;">
+          <span style="color: #4b2e1f; font-size: 13px; line-height: 16px; margin-bottom: 0; text-align: center; width: 240px;">
+            Condiciones de transporte
+          </span>
+          <mat-radio-group [formControl]="transportConditionsControl" class="d-flex align-items-center gap-3" style="height: 40px; color: #4b2e1f;">
+            <mat-radio-button [value]="true">
+              Cumple
+            </mat-radio-button>
+            <mat-radio-button [value]="false">
+              No cumple
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap align-items-end gap-3" style="width: 100%; margin-top: 12px; justify-content: space-between;">
+        <div style="flex: 1 1 180px; min-width: 160px;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>Lote</mat-label>
+            <input matInput class="reception-input" type="text" autocomplete="off" [formControl]="lotControl"/>
+          </mat-form-field>
+        </div>
+        <div class="d-flex flex-column position-relative" style="flex: 2 1 300px; min-width: 0;">
+          <div class="d-flex flex-wrap gap-2">
+            <div style="flex: 1 1 120px; min-width: 0;">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>KG/LT</mat-label>
+                <input matInput class="reception-input" type="number" min="0" [formControl]="lotKgLtControl" />
+              </mat-form-field>
+            </div>
+            <div style="flex: 1 1 120px; min-width: 0;">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>Unidades</mat-label>
+                <input matInput class="reception-input" type="number" min="0" [formControl]="lotUnitsControl" />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <div style="flex: 1 1 210px; min-width: 190px;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>Fecha de vencimiento</mat-label>
+            <input matInput class="reception-input" [matDatepicker]="expirationPicker" [formControl]="expirationDateControl" />
+            <mat-datepicker-toggle matIconSuffix [for]="expirationPicker"></mat-datepicker-toggle>
+            <mat-datepicker #expirationPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+       <div class="d-flex flex-column justify-content-center" style="flex: 1 1 110px; min-width: 100px; height: 40px;">
+          @if (expirationDateControl.value && minimumShelfLifeDays !== null) {
+            <span style="font-size: 13px; color: #4b2e1f;">
+              Vida útil
+            </span>
+            <strong [style.color]="shelfLifeComplies ? '#2e7d32' : '#c62828'">
+              {{ shelfLifeComplies ? 'Cumple' : 'No cumple' }}
+            </strong>
+          }
+        </div>
+      </div>
+      <div class="d-flex flex-wrap align-items-start gap-3" style="width: 100%; margin-top: 12px; justify-content: space-between;">
+        <div style="flex: 1 1 120px; min-width: 0;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>T1 °C Inicial</mat-label>
+            <input matInput class="reception-input" type="number" step="0.1" [formControl]="temperature1Control" />
+          </mat-form-field>
+          @if (getTemperatureStatus(temperature1Control.value); as status) {
+            <small [style.color]="status === 'CUMPLE' ? '#2e7d32' : status === 'CONDICIONAL' ? '#ed6c02' : '#c62828'">
+              {{ status === 'CUMPLE'
+                ? 'Cumple'
+                : status === 'CONDICIONAL'
+                  ? 'Condicional'
+                  : 'No cumple'
+              }}
+            </small>
+          }
+        </div>
+        <div style="flex: 1 1 120px; min-width: 0;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>T2 °C Mitad</mat-label>
+            <input matInput class="reception-input" type="number" step="0.1" [formControl]="temperature2Control" />
+          </mat-form-field>
+          @if (getTemperatureStatus(temperature2Control.value); as status) {
+            <small [style.color]="status === 'CUMPLE' ? '#2e7d32' : status === 'CONDICIONAL' ? '#ed6c02' : '#c62828'">
+              {{ status === 'CUMPLE'
+                ? 'Cumple'
+                : status === 'CONDICIONAL'
+                  ? 'Condicional'
+                  : 'No cumple'
+              }}
+            </small>
+          }
+        </div>
+        <div style="flex: 1 1 120px; min-width: 0;">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>T3 °C Final</mat-label>
+            <input matInput class="reception-input" type="number" step="0.1" [formControl]="temperature3Control" />
+          </mat-form-field>
+          @if (getTemperatureStatus(temperature3Control.value); as status) {
+            <small [style.color]="status === 'CUMPLE' ? '#2e7d32' : status === 'CONDICIONAL' ? '#ed6c02' : '#c62828'">
+              {{ status === 'CUMPLE'
+                ? 'Cumple'
+                : status === 'CONDICIONAL'
+                  ? 'Condicional'
+                  : 'No cumple'
+              }}
+            </small>
+          }
+        </div>
+        <div class="d-flex flex-column position-relative" style="flex: 2 1 280px; min-width: 0;">
+          <div class="d-flex flex-wrap gap-2">
+            <div style="flex: 1 1 130px; min-width: 0;">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>Unidades cumplen</mat-label>
+                <input matInput class="reception-input" type="number" min="0" [formControl]="visualInspectionCompliantUnitsControl" />
+              </mat-form-field>
+            </div>
+            <div style="flex: 1 1 130px; min-width: 0;">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 100%; --mat-form-field-container-height: 40px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>Unidades no cumplen</mat-label>
+                <input matInput class="reception-input" type="number" min="0" [formControl]="visualInspectionNonCompliantUnitsControl" />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  }
+</div>

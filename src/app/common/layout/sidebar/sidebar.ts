@@ -5,16 +5,18 @@ import { MenuOption } from '../../../models/menu-option.model';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [
-    RouterLink,
     RouterLinkActive,
-    MatIconModule,
+    NgTemplateOutlet,
     MatTooltipModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule,
+    RouterLink
   ],
   templateUrl: './sidebar.html',
 })
@@ -30,8 +32,9 @@ export class Sidebar {
   private readonly sessionService = inject(SessionService);
   readonly user = this.sessionService.getUser();
   private readonly router = inject(Router);
-  expandedMenuId: number | null = null;
+  //expandedMenuId: number | null = null;
   hoveredMenuId: number | null = null;
+  expandedMenuIds = new Set<number>();
   toggleHovered = false;
 
   readonly menuOptions =
@@ -52,7 +55,16 @@ export class Sidebar {
   }
 
   getChildren(parentId: number): MenuOption[] {
-    return this.menuOptions.filter(item => item.parentMenuOption === parentId);
+    return this.menuOptions
+      .filter(
+        item =>
+          item.parentMenuOption === parentId
+      )
+      .sort(
+        (a, b) =>
+          a.orderMenuOption -
+          b.orderMenuOption
+      );
   }
 
   hasChildren(item: MenuOption): boolean {
@@ -65,23 +77,36 @@ export class Sidebar {
       this.toggleSidebar.emit();
     }
 
-    this.expandedMenuId =
-      this.expandedMenuId === item.idMenuOption
-        ? null
-        : item.idMenuOption;
+    if (this.expandedMenuIds.has(item.idMenuOption)) {
+      this.expandedMenuIds.delete(item.idMenuOption);
+      return;
+    }
+
+    this.expandedMenuIds.add(item.idMenuOption);
   }
 
   isExpanded(item: MenuOption): boolean {
-    return this.expandedMenuId === item.idMenuOption;
+    return this.expandedMenuIds.has(item.idMenuOption);
+  }
+
+  private getDescendantPaths(item: MenuOption): string[] {
+    const paths: string[] = [];
+
+    if (item.pathMenuOption) {
+      paths.push(item.pathMenuOption);
+    }
+
+    const children = this.getChildren(item.idMenuOption);
+
+    for (const child of children) {
+      paths.push(...this.getDescendantPaths(child));
+    }
+
+    return paths;
   }
 
   isMenuActive(item: MenuOption): boolean {
-    const paths = [
-      item.pathMenuOption,
-      ...this
-        .getChildren(item.idMenuOption)
-        .map(child => child.pathMenuOption)
-    ].filter((path): path is string => !!path);
+    const paths = this.getDescendantPaths(item);
 
     return paths.some(
       path =>
@@ -90,8 +115,16 @@ export class Sidebar {
     );
   }
 
-  getMenuIcon(name: string): string {
-    const value = name.toLowerCase();
+  getMenuIcon(item: MenuOption): string {
+    const value = item.nameMenuOption.toLowerCase();
+
+    if (item.pathMenuOption === '/inventarios/inventarios') {
+      return 'assignment';
+    }
+
+    if (value.includes('configuración inventarios')) {
+      return 'display_settings';
+    }
 
     if (value.includes('bodega')) {
       return 'warehouse';
@@ -109,12 +142,52 @@ export class Sidebar {
       return 'admin_panel_settings';
     }
 
+    if (value.includes('conciliación')) {
+      return 'pivot_table_chart';
+    }
+
+    if (value.includes('plano')) {
+      return 'description';
+    }
+
+    if (value.includes('parámetros')) {
+      return 'lock';
+    }
+
+    if (value.includes('log')) {
+      return 'receipt_long';
+    }
+
     if (value.includes('inventario')) {
       return 'inventory';
     }
 
+    if (value.includes('proveedor')) {
+      return 'local_shipping';
+    }
+
     if (value.includes('producto')) {
       return 'cookie';
+    }
+
+    if (value.includes('formato')) {
+      return 'description';
+    }
+
+    if (value.includes('materias primas')) {
+      return 'shopping_cart';
+    }
+
+    if (value.includes('recepcion')) {
+      return 'move_to_inbox';
+    }
+
+    if (value.includes('maestro')) {
+      return 'widgets';
+    }
+
+    if (value.includes('cocina principal')) {
+      return 'event_note';
     }
 
     return 'dashboard_customize';
