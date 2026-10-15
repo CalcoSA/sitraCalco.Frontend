@@ -17,4 +17,12 @@ export class AuthService {
   login(data: LoginRequest): Observable<ApiResponse<LoginResult>> {
     return this.http.post<ApiResponse<LoginResult>>(`${apiConfig.authBaseUrl}/Auth/login`, data);
   }
+
+  registerActivity(): Observable<ApiResponse<{ sessionExpiresAt: string }>> {
+    return this.http.post<ApiResponse<{ sessionExpiresAt: string }>>(`${apiConfig.authBaseUrl}/Auth/activity`, { });
+  }
+
+  logout(): Observable<ApiResponse<object>> {
+    return this.http.post<ApiResponse<object>>(`${apiConfig.authBaseUrl}/Auth/logout`, { });
+  }
 }
