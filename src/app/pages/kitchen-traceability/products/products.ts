@@ -6,6 +6,7 @@ import { KitchenProductService } from '../../../services/kitchen-product.service
 import { ResponseModalService } from '../../../services/response-modal.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { KitchenProduct } from '../../../models/kitchen-product.model';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -14,13 +15,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-products',
   standalone: true,
   imports: [
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatTooltipModule,
@@ -60,6 +62,8 @@ export class Products implements OnInit {
   readonly total = signal(0);
   readonly take = signal(10);
   readonly page = signal(1);
+
+  readonly activeConfigurationTab = signal<'general' | 'shelfLife' | 'temperature' | 'inspection'>('general');
   
   readonly displayedColumns: string[] = [
     'product_reference',
@@ -70,6 +74,10 @@ export class Products implements OnInit {
 
   readonly receptionForm = this.formBuilder.group({
     minimum_shelf_life_days: this.formBuilder.control<number | null>(null),
+    requires_guide: this.formBuilder.nonNullable.control(false),
+    requires_shelf_life: this.formBuilder.nonNullable.control(false),
+    requires_temperature: this.formBuilder.nonNullable.control(false),
+    requires_visual_inspection: this.formBuilder.nonNullable.control(false),
   });
 
   readonly temperatureForm = this.formBuilder.group({
@@ -234,6 +242,7 @@ export class Products implements OnInit {
   }
 
   openCreateConfiguration(product: KitchenProduct): void {
+    this.activeConfigurationTab.set('general');
     this.selectedProduct.set(product);
     this.currentReceptionConfiguration.set(null);
     this.currentTemperatureConfiguration.set(null);
@@ -254,6 +263,53 @@ export class Products implements OnInit {
     );
   }
 
+  private receptionHasChanges(): boolean {
+    const current = this.currentReceptionConfiguration();
+    if (!current) return true;
+
+    const value = this.receptionForm.getRawValue();
+    const days = value.requires_shelf_life ? value.minimum_shelf_life_days : null;
+
+    return (current.requires_guide !== value.requires_guide ||
+      current.requires_shelf_life !== value.requires_shelf_life ||
+      current.requires_temperature !== value.requires_temperature ||
+      current.requires_visual_inspection !== value.requires_visual_inspection ||
+      current.minimum_shelf_life_days !== days
+    );
+  }
+
+  private temperatureHasChanges(): boolean {
+    const current = this.currentTemperatureConfiguration();
+    if (!current) return true;
+
+    const value = this.temperatureForm.getRawValue();
+
+    return (current.ideal_min_temperature !== value.ideal_min_temperature ||
+      current.ideal_max_temperature !== value.ideal_max_temperature ||
+      current.conditional_min_temperature !== value.conditional_min_temperature ||
+      current.conditional_max_temperature !== value.conditional_max_temperature ||
+      current.rejection_min_temperature !== value.rejection_min_temperature ||
+      current.rejection_max_temperature !== value.rejection_max_temperature
+    );
+  }
+
+  private async requireSuccess(request: import('rxjs').Observable<{ isSuccess: boolean; result?: boolean | null; message?: string | null; }>, fallback: string): Promise<void> {
+    const response = await firstValueFrom(request);
+
+    if (!response.isSuccess || response.result !== true) {
+      throw new Error(response.message || fallback);
+    }
+  }
+
+  private configurationError(error: unknown): string {
+    const apiError = error as {
+      message?: string;
+      error?: { message?: string };
+    };
+
+    return apiError.error?.message || apiError.message || 'Ocurrió un error al procesar la configuración.';
+  }
+  
   createReceptionConfiguration(): void {
     const product = this.selectedProduct();
 
@@ -261,18 +317,24 @@ export class Products implements OnInit {
       return;
     }
 
-    const minimumShelfLifeDays = this.receptionForm.value.minimum_shelf_life_days;
+    const value = this.receptionForm.getRawValue();
 
-    if (minimumShelfLifeDays === null || minimumShelfLifeDays === undefined) {
-      this.responseModalService.show('warning', 'Campo requerido', 'Debes ingresar la vida útil mínima en días.');
+    if (value.requires_shelf_life && (value.minimum_shelf_life_days === null || value.minimum_shelf_life_days < 0)) {
+      this.responseModalService.show('warning', 'Campo requerido', 'Debes ingresar una vida útil mínima válida.');
+      this.activeConfigurationTab.set('shelfLife');
       return;
     }
 
     this.savingReception.set(true);
+
     this.receptionConfigurationService
       .create({
         product_id: product.product_id,
-        minimum_shelf_life_days: minimumShelfLifeDays,
+        minimum_shelf_life_days: value.requires_shelf_life ? value.minimum_shelf_life_days : null,
+        requires_guide: value.requires_guide,
+        requires_shelf_life: value.requires_shelf_life,
+        requires_temperature: value.requires_temperature,
+        requires_visual_inspection: value.requires_visual_inspection,
       })
       .pipe(
         finalize(() => {
@@ -281,13 +343,13 @@ export class Products implements OnInit {
       )
       .subscribe({
         next: (response) => {
-
           if (!response.isSuccess || !response.result) {
             this.responseModalService.show('warning', 'Configuración de recepción', response.message || 'No fue posible crear la configuración de recepción.');
             return;
           }
 
-          this.responseModalService.show('success', 'Configuración de recepción', response.message);
+          this.responseModalService.show('success', 'Configuración de recepción', response.message || 'Configuración creada correctamente.');
+
           this.activeDialogRef?.close();
 
           this.activeDialogRef = this.dialog.open(
@@ -315,17 +377,25 @@ export class Products implements OnInit {
     this.currentReceptionConfiguration.set(product.product_reception_configuration);
     this.currentTemperatureConfiguration.set(product.product_temperature_configuration);
 
+    this.activeConfigurationTab.set('general');
+
+    const reception = product.product_reception_configuration;
+
     this.receptionForm.patchValue({
-      minimum_shelf_life_days: product.product_reception_configuration ?.minimum_shelf_life_days ?? null,
+      minimum_shelf_life_days: reception?.minimum_shelf_life_days ?? null,
+      requires_guide: reception?.requires_guide ?? false,
+      requires_shelf_life: reception?.requires_shelf_life ?? false,
+      requires_temperature: reception?.requires_temperature ?? false,
+      requires_visual_inspection: reception?.requires_visual_inspection ?? false,
     });
 
     this.temperatureForm.patchValue({
-      ideal_min_temperature: product.product_temperature_configuration ?.ideal_min_temperature ?? null,
-      ideal_max_temperature: product.product_temperature_configuration ?.ideal_max_temperature ?? null,
-      conditional_min_temperature: product.product_temperature_configuration ?.conditional_min_temperature ?? null,
-      conditional_max_temperature: product.product_temperature_configuration ?.conditional_max_temperature ?? null,
-      rejection_min_temperature: product.product_temperature_configuration ?.rejection_min_temperature ?? null,
-      rejection_max_temperature: product.product_temperature_configuration ?.rejection_max_temperature ?? null,
+      ideal_min_temperature: product.product_temperature_configuration?.ideal_min_temperature ?? null,
+      ideal_max_temperature: product.product_temperature_configuration?.ideal_max_temperature ?? null,
+      conditional_min_temperature: product.product_temperature_configuration?.conditional_min_temperature ?? null,
+      conditional_max_temperature: product.product_temperature_configuration?.conditional_max_temperature ?? null,
+      rejection_min_temperature: product.product_temperature_configuration?.rejection_min_temperature ?? null,
+      rejection_max_temperature: product.product_temperature_configuration?.rejection_max_temperature ?? null,
     });
 
     this.activeDialogRef = this.dialog.open(
@@ -333,96 +403,165 @@ export class Products implements OnInit {
       {
         width: '850px',
         maxWidth: '95vw',
-        height: '720px',
-        maxHeight: '90vh',
+        maxHeight: '95vh',
         autoFocus: false,
         disableClose: true,
       }
     );
   }
 
-  saveReceptionConfiguration(): void {
+  async saveReceptionConfiguration(): Promise<void> {
     const product = this.selectedProduct();
 
-    if (!product || this.savingReception()) {
+    if (!product || this.savingReception() || this.savingTemperature()) {
       return;
     }
 
-    const days = this.receptionForm.value.minimum_shelf_life_days;
-
-    if (days === null || days === undefined) {
-      this.receptionValidationError.set('Debes ingresar la vida útil mínima en días.');
-      return;
-    }
+    const reception = this.receptionForm.getRawValue();
+    const temperature = this.temperatureForm.getRawValue();
+    const currentReception = this.currentReceptionConfiguration();
+    const currentTemperature = this.currentTemperatureConfiguration();
 
     this.receptionValidationError.set('');
+    this.temperatureValidationError.set('');
 
-    const current = this.currentReceptionConfiguration();
+    if (reception.requires_shelf_life && ( reception.minimum_shelf_life_days === null || !Number.isFinite(reception.minimum_shelf_life_days) || reception.minimum_shelf_life_days < 0 )) {
+      this.receptionValidationError.set('Debes ingresar una vida útil mínima válida.');
+      this.activeConfigurationTab.set('shelfLife');
+      return;
+    }
+
+    const receptionData = {
+      requires_guide: reception.requires_guide,
+      requires_shelf_life: reception.requires_shelf_life,
+      requires_temperature: reception.requires_temperature,
+      requires_visual_inspection: reception.requires_visual_inspection,
+      minimum_shelf_life_days: reception.requires_shelf_life ? reception.minimum_shelf_life_days : null
+    };
+
+    const temperatureData = {
+      ideal_min_temperature: temperature.ideal_min_temperature!,
+      ideal_max_temperature: temperature.ideal_max_temperature!,
+      conditional_min_temperature: temperature.conditional_min_temperature,
+      conditional_max_temperature: temperature.conditional_max_temperature,
+      rejection_min_temperature: temperature.rejection_min_temperature,
+      rejection_max_temperature: temperature.rejection_max_temperature
+    };
+
+    const receptionChanged = this.receptionHasChanges();
+    const temperatureChanged = reception.requires_temperature && this.temperatureHasChanges();
+
+    if (temperatureChanged) {
+      const min = temperature.ideal_min_temperature;
+      const max = temperature.ideal_max_temperature;
+
+      if (min === null || max === null || !Number.isFinite(min) || !Number.isFinite(max) || min > max) {
+        this.temperatureValidationError.set('Verifica las temperaturas ideales mínima y máxima.');
+        this.activeConfigurationTab.set('temperature');
+        return;
+      }
+
+      const ranges = [
+        [temperature.conditional_min_temperature,
+        temperature.conditional_max_temperature],
+        [temperature.rejection_min_temperature,
+        temperature.rejection_max_temperature]
+      ];
+
+      if (ranges.some(([rangeMin, rangeMax]) =>
+        (rangeMin !== null && !Number.isFinite(rangeMin)) ||
+        (rangeMax !== null && !Number.isFinite(rangeMax)) ||
+        (rangeMin !== null && rangeMax !== null && rangeMin > rangeMax)
+      )) {
+        this.temperatureValidationError.set('Verifica los rangos condicional y de rechazo.');
+        this.activeConfigurationTab.set('temperature');
+        return;
+      }
+    }
+
+    if (!receptionChanged && !temperatureChanged && !(currentTemperature && !reception.requires_temperature)) {
+      this.responseModalService.show('info', 'Sin cambios', 'No hay cambios pendientes por guardar.');
+      return;
+    }
 
     this.savingReception.set(true);
+    let changesSaved = false;
 
-    const request$ = current
-      ? this.receptionConfigurationService.update(
-          current.product_configuration_id,
-          {
-            minimum_shelf_life_days: days,
-          }
-        )
-      : this.receptionConfigurationService.create({
-          product_id: product.product_id,
-          minimum_shelf_life_days: days,
-        });
+    try {
+      if (!reception.requires_temperature && currentTemperature) {
+        await this.requireSuccess(this.temperatureConfigurationService.delete(currentTemperature.temperature_configuration_id), 'No fue posible eliminar la temperatura.');
+        changesSaved = true;
+      }
 
-    request$
-      .pipe(
-        finalize(() => {
-          this.savingReception.set(false);
-        })
-      )
-      .subscribe({
-        next: (response) => {
+      if (receptionChanged) {
+        if (currentReception) {
+          await this.requireSuccess(this.receptionConfigurationService.update(currentReception.product_configuration_id, receptionData), 'No fue posible actualizar la recepción.');
+        } else {
+          await this.requireSuccess(
+            this.receptionConfigurationService.create({
+              product_id: product.product_id, ...receptionData
+            }), 'No fue posible crear la recepción.');
+        }
 
-          if (!response.isSuccess || !response.result) {
-            this.responseModalService.show('warning', 'Configuración de recepción', response.message || 'No fue posible guardar la configuración.');
-            return;
-          }
+        changesSaved = true;
+      }
 
-          this.currentReceptionConfiguration.set({
-            product_configuration_id: 0,
-            product_id: product.product_id,
-            minimum_shelf_life_days: days,
-            created_at: '',
-            created_by: '',
-            updated_at: null,
-            updated_by: null,
-          });
+      if (reception.requires_temperature && temperatureChanged) {
+        if (currentTemperature) {
+          await this.requireSuccess(this.temperatureConfigurationService.update(currentTemperature.temperature_configuration_id, temperatureData), 'No fue posible actualizar la temperatura.');
+        } else {
+          await this.requireSuccess(
+            this.temperatureConfigurationService.create({
+              product_id: product.product_id,
+              ...temperatureData
+            }), 'No fue posible crear la temperatura.');
+        }
 
-          this.loadProducts(this.page(), this.take(), this.searchControl.value.trim());
-        },
+        changesSaved = true;
+      }
 
-        error: (error) => {
-          this.responseModalService.show('error', 'Error', error.error?.message || 'Ocurrió un error al guardar la configuración.');
-        },
-      });
+      this.closeConfigurationAndReload();
+
+      this.responseModalService.show('success', 'Configuración guardada', 'Los cambios del producto se guardaron correctamente.');
+
+    } catch (error: unknown) {
+      const message = this.configurationError(error);
+
+      if (changesSaved) {
+        this.closeConfigurationAndReload();
+        this.responseModalService.show('warning', 'Guardado parcial', `${message} Algunos cambios se guardaron. Abre nuevamente el producto para verificar su configuración.`);
+      } else {
+        this.responseModalService.show('error', 'Error de configuración', message);
+      }
+    } finally {
+      this.savingReception.set(false);
+    }
   }
 
-  saveTemperatureConfiguration(): void {
+  async saveTemperatureConfiguration(): Promise<void> {
     const product = this.selectedProduct();
+    const reception = this.currentReceptionConfiguration();
 
-    if (!product || this.savingTemperature()) {
+    if (!product || this.savingTemperature() || this.savingReception()) {
+      return;
+    }
+
+    if (!reception || !reception.requires_temperature) {
+      this.responseModalService.show('warning', 'Configuración requerida', 'Primero debes guardar la recepción con el control de temperatura activado.');
       return;
     }
 
     const value = this.temperatureForm.getRawValue();
 
-    if (value.ideal_min_temperature === null || value.ideal_max_temperature === null) {
-      this.temperatureValidationError.set('Debes ingresar la temperatura ideal mínima y máxima.');
+    if (value.ideal_min_temperature === null ||
+      value.ideal_max_temperature === null ||
+      !Number.isFinite(value.ideal_min_temperature) ||
+      !Number.isFinite(value.ideal_max_temperature) ||
+      value.ideal_min_temperature > value.ideal_max_temperature
+    ) {
+      this.temperatureValidationError.set('Verifica las temperaturas ideales mínima y máxima.');
       return;
     }
-
-    this.temperatureValidationError.set('');
-
-    const current = this.currentTemperatureConfiguration();
 
     const data = {
       ideal_min_temperature: value.ideal_min_temperature,
@@ -430,108 +569,109 @@ export class Products implements OnInit {
       conditional_min_temperature: value.conditional_min_temperature,
       conditional_max_temperature: value.conditional_max_temperature,
       rejection_min_temperature: value.rejection_min_temperature,
-      rejection_max_temperature: value.rejection_max_temperature,
+      rejection_max_temperature: value.rejection_max_temperature
     };
 
+    const current = this.currentTemperatureConfiguration();
     this.savingTemperature.set(true);
 
-    const request$ = current
-      ? this.temperatureConfigurationService.update( current.temperature_configuration_id, data)
-      : this.temperatureConfigurationService.create({
-          product_id: product.product_id,
-          ...data,
-        });
+    try {
+      if (current) {
+        await this.requireSuccess(
+          this.temperatureConfigurationService.update(current.temperature_configuration_id, data), 'No fue posible actualizar los rangos.');
+      } else {
+        await this.requireSuccess(
+          this.temperatureConfigurationService.create({
+            product_id: product.product_id,
+            ...data
+          }), 'No fue posible crear los rangos.'
+        );
+      }
 
-    request$
-      .pipe(
-        finalize(() => {
-          this.savingTemperature.set(false);
-        })
-      )
-      .subscribe({
-        next: (response) => {
-
-          if (!response.isSuccess || !response.result) {
-            this.responseModalService.show('warning', 'Configuración de temperatura', response.message || 'No fue posible guardar la configuración.');
-            return;
-          }
-
-          this.activeDialogRef?.close();
-          this.loadProducts(this.page(), this.take(), this.searchControl.value.trim());
-          this.responseModalService.show('success', 'Configuración exitosa', 'La configuración del producto se guardó correctamente.');
-          this.closeConfigurationAndReload();
-        },
-
-        error: (error) => {
-          this.responseModalService.show('error', 'Error', error.error?.message || 'Ocurrió un error al guardar la configuración.');
-        },
-      });
+      this.closeConfigurationAndReload();
+      this.responseModalService.show('success', 'Temperatura guardada', 'Los rangos de temperatura se guardaron correctamente.');
+    } catch (error: unknown) {
+      this.responseModalService.show('error', 'Error de temperatura', this.configurationError(error));
+    } finally {
+      this.savingTemperature.set(false);
+    }
   }
 
-  deleteReceptionConfiguration(): void {
-    const configuration = this.currentReceptionConfiguration();
+  async deleteReceptionConfiguration(): Promise<void> {
+    const reception = this.currentReceptionConfiguration();
+    const temperature = this.currentTemperatureConfiguration();
 
-    if (!configuration || this.savingReception()) {
+    if (!reception || this.savingReception() || this.savingTemperature()) {
       return;
     }
 
     this.savingReception.set(true);
-    this.receptionConfigurationService
-      .delete(configuration.product_configuration_id)
-      .pipe(
-        finalize(() => {
-          this.savingReception.set(false);
-        })
-      )
-      .subscribe({
-        next: (response) => {
+    let temperatureDeleted = false;
 
-          if (!response.isSuccess || !response.result) {
-            this.responseModalService.show('warning', 'Configuración de recepción', response.message || 'No fue posible eliminar la configuración.');
-            return;
-          }
+    try {
+      if (temperature) {
+        await this.requireSuccess(this.temperatureConfigurationService.delete(temperature.temperature_configuration_id), 'No fue posible eliminar la temperatura.');
+        temperatureDeleted = true;
+      }
 
-          this.responseModalService.show('success', 'Configuración eliminada', response.message);
-          this.closeConfigurationAndReload();
-        },
+      await this.requireSuccess(this.receptionConfigurationService.delete(reception.product_configuration_id), 'No fue posible eliminar la recepción.');
 
-        error: (error) => {
-          this.responseModalService.show('error', 'Error', error.error?.message || 'Ocurrió un error al eliminar la configuración.');
-        },
-      });
+      this.closeConfigurationAndReload();
+      this.responseModalService.show('success', 'Configuración eliminada', 'Se eliminó la configuración del producto.');
+
+    } catch (error: unknown) {
+      if (temperatureDeleted) {
+        this.closeConfigurationAndReload();
+      }
+
+      this.responseModalService.show(temperatureDeleted ? 'warning' : 'error', 'Eliminar configuración', this.configurationError(error));
+    } finally {
+      this.savingReception.set(false);
+    }
   }
 
-  deleteTemperatureConfiguration(): void {
-    const configuration = this.currentTemperatureConfiguration();
+  async deleteTemperatureConfiguration(): Promise<void> {
+    const temperature = this.currentTemperatureConfiguration();
+    const reception = this.currentReceptionConfiguration();
 
-    if (!configuration || this.savingTemperature()) {
+    if (!temperature || !reception || this.savingTemperature() || this.savingReception()) {
       return;
     }
 
     this.savingTemperature.set(true);
-    this.temperatureConfigurationService
-      .delete(configuration.temperature_configuration_id)
-      .pipe(
-        finalize(() => {
-          this.savingTemperature.set(false);
-        })
-      )
-      .subscribe({
-        next: (response) => {
+    let temperatureDeleted = false;
 
-          if (!response.isSuccess || !response.result) {
-            this.responseModalService.show('warning', 'Configuración de temperatura', response.message || 'No fue posible eliminar la configuración.');
-            return;
+    try {
+      await this.requireSuccess(this.temperatureConfigurationService.delete(temperature.temperature_configuration_id), 'No fue posible eliminar la temperatura.');
+
+      temperatureDeleted = true;
+
+      await this.requireSuccess(
+        this.receptionConfigurationService.update(
+          reception.product_configuration_id,
+          {
+            requires_guide: reception.requires_guide,
+            requires_shelf_life: reception.requires_shelf_life,
+            requires_temperature: false,
+            requires_visual_inspection: reception.requires_visual_inspection,
+            minimum_shelf_life_days: reception.requires_shelf_life ? reception.minimum_shelf_life_days : null
           }
+        ),
+        'Se eliminaron los rangos, pero no fue posible desactivar el control de temperatura.'
+      );
 
-          this.responseModalService.show('success', 'Configuración eliminada', response.message);
-          this.closeConfigurationAndReload();
-        },
+      this.closeConfigurationAndReload();
+      this.responseModalService.show('success', 'Temperatura eliminada', 'Se eliminaron los rangos y se desactivó el control de temperatura.');
 
-        error: (error) => {
-          this.responseModalService.show('error', 'Error', error.error?.message || 'Ocurrió un error al eliminar la configuración.');
-        },
-      });
+    } catch (error: unknown) {
+      if (temperatureDeleted) {
+        this.closeConfigurationAndReload();
+      }
+
+      this.responseModalService.show(temperatureDeleted ? 'warning' : 'error', 'Eliminar temperatura', this.configurationError(error));
+    } finally {
+      this.savingTemperature.set(false);
+    }
   }
 
   closeConfigurationAndReload(): void {

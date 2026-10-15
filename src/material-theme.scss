@@ -77,6 +77,28 @@ html {
     ripple-color: rgba(75, 46, 31, 0.08),
     label-text-color: #4b2e1f,
   ));
+  @include mat.slide-toggle-overrides((
+    selected-handle-color: #ffffff,
+    selected-hover-handle-color: #ffffff,
+    selected-focus-handle-color: #ffffff,
+    selected-pressed-handle-color: #ffffff,
+    selected-track-color: #4b2e1f,
+    selected-hover-track-color: #4b2e1f,
+    selected-focus-track-color: #4b2e1f,
+    selected-pressed-track-color: #4b2e1f,
+    unselected-handle-color: #ffffff,
+    unselected-hover-handle-color: #ffffff,
+    unselected-focus-handle-color: #ffffff,
+    unselected-pressed-handle-color: #ffffff,
+    unselected-track-color: #d9d0c8,
+    unselected-hover-track-color: #d9d0c8,
+    unselected-focus-track-color: #d9d0c8,
+    unselected-pressed-track-color: #d9d0c8,
+    track-outline-color: #d9d0c8,
+    selected-track-outline-color: #4b2e1f,
+    selected-icon-color: #4b2e1f,
+    unselected-icon-color: #d9d0c8,
+  ));
 }
 
 .mat-mdc-table .mat-mdc-row:hover {

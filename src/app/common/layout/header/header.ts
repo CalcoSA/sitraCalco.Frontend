@@ -1,8 +1,7 @@
-import { SessionService } from '../../../services/session.service';
+import { InactivityService } from '../../../services/inactivity.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
@@ -15,12 +14,10 @@ import { Router } from '@angular/router';
 })
 
 export class Header {
-  
-  private readonly sessionService = inject(SessionService);
-  private readonly router = inject(Router);
+
+  private readonly inactivityService = inject(InactivityService);
 
   logout(): void {
-    this.sessionService.clearSession();
-    this.router.navigateByUrl('/login', { replaceUrl: true });
+    this.inactivityService.logout();
   }
 }

@@ -152,167 +152,296 @@
 </div>
 
 <ng-template #configurationDialog>
-  <div
-    style="
-      width:100%;
-      max-height:90vh;
-      overflow-y:auto;
-      overflow-x:hidden;
-      background-color:#fffdf8;
-      padding-right:8px;
-      scrollbar-gutter:stable;
-      --mat-form-field-container-height:48px;
-      --mat-form-field-container-vertical-padding:12px;
-    "
-  >
-    <div class="d-flex justify-content-between align-items-center gap-2 p-4" style="position:sticky; top:0; z-index:2; background-color:#fffdf8; border-bottom:1px solid #e0cdbb;">
-      <div class="d-flex align-items-center gap-2">
-        <mat-icon style="color:#4b2e1f;">
-          tune
+  <div [formGroup]="receptionForm" class="d-flex flex-column" style="background:#fffdf8;color:#4b2e1f;max-height:92dvh;overflow:hidden;border-radius:20px;min-width:0;">
+    <header class="d-flex justify-content-between align-items-start gap-2 px-3 px-md-4 py-3" style="background:#4b2e1f;color:#fff;flex-shrink:0;">
+      <div class="flex-grow-1" style="min-width:0;">
+        <div class="d-flex align-items-center gap-2">
+          <mat-icon style="flex-shrink:0;">tune</mat-icon>
+          <h2 class="m-0" style="font-size:clamp(17px,2.5vw,22px); font-weight:600; color:#fff;">
+            Configuración del producto
+          </h2>
+        </div>
+        @if (selectedProduct(); as product) {
+          <div class="mt-1" style="font-size:13px; color:#f7e8d8; overflow-wrap:anywhere;">
+            {{ product.product_reference.trim() }} · {{ product.product_name }} · {{ product.unit_of_measure }}
+          </div>
+        }
+      </div>
+      <button type="button" mat-icon-button (click)="closeDialog()" [disabled]="savingReception() || savingTemperature()" aria-label="Cerrar configuración" style="color:#fff;flex-shrink:0;">
+        <mat-icon>
+          close
         </mat-icon>
-        <h2 class="m-0" style="color:#4b2e1f; font-size:20px; font-weight:600;">
-          Configuración del producto
-        </h2>
-      </div>
-      <button mat-icon-button type="button" (click)="closeDialog()">
-        <mat-icon>close</mat-icon>
       </button>
-    </div>
-    @if (selectedProduct(); as product) {
-      <div class="p-3 p-md-4 d-flex flex-column gap-3">
+    </header>
+    <div class="flex-grow-1 px-3 px-md-4 py-3" style="overflow-y:auto;overflow-x:hidden;min-height:0;">
+      <nav class="row g-2 mb-4" aria-label="Secciones de configuración">
+        <div class="col-12 col-sm-4">
+          <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center gap-1 py-2 px-1" (click)="activeConfigurationTab.set('general')" [style.background]="activeConfigurationTab() === 'general' ? '#f2e5d9' : '#fffdf8'" [style.border-color]="activeConfigurationTab() === 'general' ? '#9a7359' : '#e5d7cb'" style="border:1px solid;border-radius:11px;min-height:66px;color:#4b2e1f;font-size:12px;">
+            <mat-icon style="margin:0;">
+              tune
+            </mat-icon>
+            <span>
+              General
+            </span>
+          </button>
+        </div>
+        <div class="col-12 col-sm-4">
+          <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center gap-1 py-2 px-1" (click)="activeConfigurationTab.set('shelfLife')" [style.background]="activeConfigurationTab() === 'shelfLife' ? '#f2e5d9' : '#fffdf8'" [style.border-color]="activeConfigurationTab() === 'shelfLife' ? '#9a7359' : '#e5d7cb'" style="border:1px solid;border-radius:11px;min-height:66px;color:#4b2e1f;font-size:12px;">
+            <mat-icon style="margin:0;">
+              event_available
+            </mat-icon>
+            <span>
+              Vida útil
+            </span>
+          </button>
+        </div>
+        <div class="col-12 col-sm-4">
+          <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center gap-1 py-2 px-1" (click)="activeConfigurationTab.set('temperature')" [style.background]="activeConfigurationTab() === 'temperature' ? '#f2e5d9' : '#fffdf8'" [style.border-color]="activeConfigurationTab() === 'temperature' ? '#9a7359' : '#e5d7cb'" style="border:1px solid;border-radius:11px;min-height:66px;color:#4b2e1f;font-size:12px;">
+            <mat-icon style="margin:0;">
+              thermostat
+            </mat-icon>
+            <span>
+              Temperatura
+            </span>
+          </button>
+        </div>
+      </nav>
+      @if (activeConfigurationTab() === 'general') {
         <section>
-          <div class="d-flex align-items-center gap-2 mb-2" style="color:#4b2e1f;">
-            <mat-icon>inventory_2</mat-icon>
-            <strong>Información del producto</strong>
-          </div>
-          <div class="row g-2">
-            <div class="col-12 col-md-6">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                <mat-label>Producto</mat-label>
-                <input matInput [value]="product.product_name" readonly />
-              </mat-form-field>
-            </div>
-            <div class="col-6 col-md-3">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                <mat-label>Referencia</mat-label>
-                <input matInput [value]="product.product_reference.trim()" readonly />
-              </mat-form-field>
-            </div>
-            <div class="col-6 col-md-3">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                <mat-label>Unidad de medida</mat-label>
-                <input matInput [value]="product.unit_of_measure" readonly />
-              </mat-form-field>
-            </div>
-          </div>
-        </section>
-        <section>
-          <div class="d-flex align-items-center gap-2 mb-2" style="color:#4b2e1f;">
-            <mat-icon>event_available</mat-icon>
-            <strong>Vida Útil</strong>
-          </div>
-          @if (receptionValidationError()) {
-            <div class="d-flex align-items-center gap-2 mb-2" style="background-color:#fff4e5; color:#7a4300; border-radius:12px; padding:12px 16px; font-size:14px;">
-              <mat-icon style="color:#ed6c02;">
-                warning_amber
-              </mat-icon>
-              <span>
-                {{ receptionValidationError() }}
-              </span>
-            </div>
-          }
-          <form [formGroup]="receptionForm" (ngSubmit)="saveReceptionConfiguration()">
-            <div class="d-flex flex-column flex-sm-row align-items-stretch gap-2">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flex-grow-1">
-                <mat-label>Vida útil mínima (días)</mat-label>
-                <input matInput type="number" min="0" formControlName="minimum_shelf_life_days" />
-              </mat-form-field>
-              @if (currentReceptionConfiguration()) {
-                <button mat-stroked-button type="button" [disabled]="savingReception()" (click)="deleteReceptionConfiguration()" style="color:#b3261e; border-color:#b3261e; border-radius:10px; min-height:45px; height:45px;">
-                  <mat-icon>delete</mat-icon>
-                  Eliminar
-                </button>
-              }
-              <button mat-flat-button type="submit" [disabled]="savingReception()" style="background-color:#4b2e1f; color:#ffffff; border-radius:10px; min-height:45px; height:45px; padding:0 18px; font-weight:600;">
+          <h3 class="mb-2" style="font-size:20px;font-weight:650;color:#4b2e1f;">
+            Controles de recepción
+          </h3>
+          <p class="mb-3" style="color:#8b6a55;font-size:14px;">
+            Selecciona los controles que aplican a este producto.
+          </p>
+          <div>
+            <div class="d-flex align-items-center gap-3 py-3" style="border-bottom:1px solid #e9d9cc;">
+              <span class="d-flex align-items-center justify-content-center" style="width:43px;height:43px;min-width:43px;background:#f7e8d8;border-radius:12px;">
                 <mat-icon>
-                  {{ currentReceptionConfiguration() ? 'save' : 'add' }}
+                  description
                 </mat-icon>
-                {{ currentReceptionConfiguration() ? 'Actualizar' : 'Agregar' }}
-              </button>
-            </div>
-          </form>
-        </section>
-        <section>
-          <div class="d-flex align-items-center gap-2 mb-3" style="color:#4b2e1f;">
-            <mat-icon>thermostat</mat-icon>
-            <strong>Configuración de temperatura</strong>
-          </div>
-          @if (temperatureValidationError()) {
-            <div class="d-flex align-items-center gap-2 mb-2" style="background-color:#fff4e5; color:#7a4300; border-radius:12px; padding:12px 16px; font-size:14px;">
-              <mat-icon style="color:#ed6c02;">
-                warning_amber
-              </mat-icon>
-              <span>
-                {{ temperatureValidationError() }}
               </span>
+              <div class="flex-grow-1" style="min-width:0;">
+                <div style="font-weight:600;">
+                  Número de guía
+                </div>
+                <div style="font-size:13px;color:#8b6a55;">
+                  Solicitar guía de transporte</div>
+                </div>
+              <mat-slide-toggle formControlName="requires_guide" aria-label="Requiere guía" style="flex-shrink:0;" />
+            </div>
+            <div class="d-flex align-items-center gap-3 py-3" style="border-bottom:1px solid #e9d9cc;">
+              <span class="d-flex align-items-center justify-content-center" style="width:43px;height:43px;min-width:43px;background:#f7e8d8;border-radius:12px;">
+                <mat-icon>
+                  event_available
+                </mat-icon>
+              </span>
+              <div class="flex-grow-1" style="min-width:0;">
+                <div style="font-weight:600;">
+                  Vida útil
+                </div>
+                <div style="font-size:13px;color:#8b6a55;">
+                  Validar fecha de vencimiento
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="requires_shelf_life" aria-label="Requiere vida útil" style="flex-shrink:0;" />
+            </div>
+            <div class="d-flex align-items-center gap-3 py-3" style="border-bottom:1px solid #e9d9cc;">
+              <span class="d-flex align-items-center justify-content-center" style="width:43px;height:43px;min-width:43px;background:#f7e8d8;border-radius:12px;">
+                <mat-icon>
+                  thermostat
+                </mat-icon>
+              </span>
+              <div class="flex-grow-1" style="min-width:0;">
+                <div style="font-weight:600;">
+                  Temperatura
+                </div>
+                <div style="font-size:13px;color:#8b6a55;">
+                  Validar rangos de temperatura
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="requires_temperature" aria-label="Requiere temperatura" style="flex-shrink:0;" />
+            </div>
+            <div class="d-flex align-items-center gap-3 py-3" style="border-bottom:1px solid #e9d9cc;">
+              <span class="d-flex align-items-center justify-content-center" style="width:43px;height:43px;min-width:43px;background:#f7e8d8;border-radius:12px;">
+                <mat-icon>
+                  visibility
+                </mat-icon>
+              </span>
+              <div class="flex-grow-1" style="min-width:0;">
+                <div style="font-weight:600;">
+                  Inspección visual
+                </div>
+                <div style="font-size:13px;color:#8b6a55;">
+                  Registrar unidades conformes
+                </div>
+              </div>
+              <mat-slide-toggle formControlName="requires_visual_inspection" aria-label="Requiere inspección visual" style="flex-shrink:0;" />
+            </div>
+          </div>
+        </section>
+      }
+      @if (activeConfigurationTab() === 'shelfLife') {
+        <section>
+          <h3 style="font-size:20px;font-weight:650;">
+            Vida útil mínima
+          </h3>
+          @if (receptionForm.controls.requires_shelf_life.value) {
+            <p style="font-size:14px;color:#8b6a55;">
+              Define los días mínimos de vida útil aceptados durante la recepción.
+            </p>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100" style="max-width:360px;">
+              <mat-label>
+                Vida útil mínima (días)
+              </mat-label>
+              <input matInput type="number" min="0" formControlName="minimum_shelf_life_days" />
+            </mat-form-field>
+          } @else {
+            <div class="p-3" style="background:#f7e8d8;border-radius:12px;font-size:14px;">
+              Activa el control de vida útil en la pestaña General para configurar los días.
             </div>
           }
-          <form [formGroup]="temperatureForm" (ngSubmit)="saveTemperatureConfiguration()">
-            <div class="row g-2">
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                  <mat-label>Ideal mínima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="ideal_min_temperature" />
-                </mat-form-field>
+        </section>
+      }
+      @if (activeConfigurationTab() === 'temperature') {
+        <section>
+          <h3 style="font-size:20px;font-weight:650;">
+            Rangos de temperatura
+          </h3>
+          @if (receptionForm.controls.requires_temperature.value) {
+            <div [formGroup]="temperatureForm" class="d-flex flex-column gap-3 mt-3">
+              <div class="p-3" style="background:#f4faf4;border:1px solid #d5e7d5;border-radius:12px;">
+                <div class="d-flex align-items-center gap-2 mb-3" style="color:#2e7d32;font-weight:600;">
+                  <mat-icon>
+                    check_circle
+                  </mat-icon>
+                  Rango ideal
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Mínima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="ideal_min_temperature" />
+                    </mat-form-field>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Máxima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="ideal_max_temperature" />
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                  <mat-label>Ideal máxima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="ideal_max_temperature"/>
-                </mat-form-field>
+              <div class="p-3" style="background:#fffbf2;border:1px solid #efdfb9;border-radius:12px;">
+                <div class="d-flex align-items-center gap-2 mb-3" style="color:#986100;font-weight:600;">
+                  <mat-icon>
+                    warning_amber
+                  </mat-icon>
+                  Rango condicional
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Mínima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="conditional_min_temperature" />
+                    </mat-form-field>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Máxima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="conditional_max_temperature" />
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                  <mat-label>Condicional mínima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="conditional_min_temperature" />
-                </mat-form-field>
-              </div>
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
-                  <mat-label>Condicional máxima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="conditional_max_temperature" />
-                </mat-form-field>
-              </div>
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" class="w-100">
-                  <mat-label>Rechazo mínima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="rejection_min_temperature"/>
-                </mat-form-field>
-              </div>
-              <div class="col-12 col-md-6">
-                <mat-form-field appearance="outline" class="w-100">
-                  <mat-label>Rechazo máxima</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="rejection_max_temperature" />
-                </mat-form-field>
+              <div class="p-3" style="background:#fff7f6;border:1px solid #eecac7;border-radius:12px;">
+                <div class="d-flex align-items-center gap-2 mb-3" style="color:#b3261e;font-weight:600;">
+                  <mat-icon>
+                    cancel
+                  </mat-icon>
+                  Rango de rechazo
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Mínima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="rejection_min_temperature" />
+                    </mat-form-field>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+                      <mat-label>
+                        Máxima (°C)
+                      </mat-label>
+                      <input matInput type="number" step="0.01" formControlName="rejection_max_temperature" />
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="d-flex flex-wrap justify-content-end gap-2">
+            <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
               @if (currentTemperatureConfiguration()) {
-                <button mat-stroked-button type="button" [disabled]="savingTemperature()" (click)="deleteTemperatureConfiguration()" style="color:#b3261e; border-color:#b3261e; border-radius:10px; min-height:45px; height:45px; padding:0 18px; font-weight:500;">
-                  <mat-icon>delete</mat-icon>
-                  Eliminar
+                <button mat-stroked-button type="button" (click)="deleteTemperatureConfiguration()" [disabled]="savingTemperature() || savingReception()" style="border-color:#b3261e;color:#b3261e;border-radius:10px;">
+                  <mat-icon>
+                    delete
+                  </mat-icon>
+                  Eliminar temperatura
                 </button>
               }
-              <button mat-flat-button type="submit" [disabled]="savingTemperature()" style="background-color:#4b2e1f; color:#ffffff; border-radius:10px; min-height:45px; height:45px; padding:0 18px; font-weight:600;">
-                <mat-icon>
-                  {{ currentTemperatureConfiguration() ? 'save' : 'check' }}
-                </mat-icon>
-                {{ currentTemperatureConfiguration() ? 'Actualizar' : 'Terminar' }}
-              </button>
             </div>
-          </form>
+          } @else {
+            <div class="p-3 mt-3" style="background:#f7e8d8;border-radius:12px;font-size:14px;">
+              Activa el control de temperatura en la pestaña General para configurar sus rangos.
+            </div>
+          }
         </section>
-      </div>
-    }
+      }
+      @if (receptionValidationError()) {
+        <div class="d-flex gap-2 align-items-start p-2 mt-3" style="background:#fff4e5;color:#7a4300;border-radius:10px;font-size:13px;">
+          <mat-icon>
+            warning_amber
+          </mat-icon>
+          <span>
+            {{ receptionValidationError() }}
+          </span>
+        </div>
+      }
+      @if (temperatureValidationError() && activeConfigurationTab() === 'temperature') {
+        <div class="d-flex gap-2 align-items-start p-2 mt-3" style="background:#fff4e5;color:#7a4300;border-radius:10px;font-size:13px;">
+          <mat-icon>
+            warning_amber
+          </mat-icon>
+          <span>
+            {{ temperatureValidationError() }}
+          </span>
+        </div>
+      }
+    </div>
+    <footer class="d-flex flex-wrap align-items-center justify-content-end gap-2 px-3 px-md-4 py-3" style="background:#fffdf8;border-top:1px solid #eaded3;flex-shrink:0;">
+      @if (currentReceptionConfiguration()) {
+        <button type="button" mat-stroked-button (click)="deleteReceptionConfiguration()" [disabled]="savingReception() || savingTemperature()" style="border-color:#b3261e;color:#b3261e;border-radius:10px;">
+          Eliminar
+        </button>
+      }
+      <button type="button" mat-stroked-button (click)="closeDialog()" [disabled]="savingReception() || savingTemperature()" style="border-color:#e5d7cb;color:#4b2e1f;border-radius:10px;">
+        Cancelar
+      </button>
+      <button type="button" mat-flat-button (click)="saveReceptionConfiguration()" [disabled]="savingReception() || savingTemperature()" style="background:#4b2e1f;color:#fff;border-radius:10px;font-weight:500;">
+        <mat-icon>
+          save
+        </mat-icon>
+        {{ savingReception() ? 'Guardando...' : 'Guardar configuración' }}
+      </button>
+    </footer>
   </div>
 </ng-template>
