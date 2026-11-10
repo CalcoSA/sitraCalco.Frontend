@@ -8,16 +8,30 @@
         Configuración Bodegas
       </h2>
     </div>
-    <button mat-stroked-button type="button" routerLink="/inventarios/configuracion-bodega/crear" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 16px; font-weight: 500;">
-      <span class="d-inline-flex align-items-center justify-content-center gap-2" style="line-height: 50px;">
-        <mat-icon style="font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
-          add_business
-        </mat-icon>
-        <span style="line-height: 50px;">
-          Crear bodega
+    <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+       @if (canCreateSection) {
+        <button mat-stroked-button type="button" routerLink="/inventarios/configuracion-bodega/crear-seccion" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 40px; padding: 0 16px; font-weight: 500;">
+          <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 40px; line-height: normal;">
+            <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+              shelves
+            </mat-icon>
+            <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+              Crear sección
+            </span>
+          </span>
+        </button>
+      }
+      <button mat-stroked-button type="button" routerLink="/inventarios/configuracion-bodega/crear" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 40px; padding: 0 16px; font-weight: 500;">
+        <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 40px; line-height: normal;">
+          <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+            add_business
+          </mat-icon>
+          <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+            Crear bodega
+          </span>
         </span>
-      </span>
-    </button>
+      </button>
+    </div>
   </div>
   <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8;">
     @if (loading()) {

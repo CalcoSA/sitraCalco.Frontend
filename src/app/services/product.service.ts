@@ -1,4 +1,4 @@
-import { Product, ProductSyncResult, ProductSearchResult } from '../models/product.model';
+import { Product, ProductSyncResult, ProductSearchResult, ProductImageUpdateResult, ProductImageDeleteResult } from '../models/product.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ApiResponse } from '../models/api-response.model';
 import { PagedResult } from '../models/pagination.model';
@@ -38,5 +38,17 @@ export class ProductService {
 
   syncProducts(): Observable<ApiResponse<ProductSyncResult>> {
     return this.http.post<ApiResponse<ProductSyncResult>>(`${apiConfig.inventoryBaseUrl}/Product/sync`, {});
+  }
+
+  updateImage(productId: number, file: File): Observable<ApiResponse<ProductImageUpdateResult>> {
+    const formData = new FormData();
+
+    formData.append('file', file, file.name);
+    
+    return this.http.put<ApiResponse<ProductImageUpdateResult>>(`${apiConfig.inventoryBaseUrl}/Product/${productId}/image`, formData);
+  }
+
+  deleteImage(productId: number): Observable<ApiResponse<ProductImageDeleteResult>> {
+    return this.http.delete<ApiResponse<ProductImageDeleteResult>>(`${apiConfig.inventoryBaseUrl}/Product/${productId}/image`);
   }
 }

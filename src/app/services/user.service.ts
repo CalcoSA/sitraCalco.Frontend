@@ -1,4 +1,4 @@
-import { User, UserCreate, UserUpdate } from '../models/user.model';
+import { User, SolutionCenter, UserCreate, UserUpdate } from '../models/user.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ApiResponse } from '../models/api-response.model';
 import { PagedResult } from '../models/pagination.model';
@@ -26,6 +26,10 @@ export class UserService {
     }
 
     return this.http.get<ApiResponse<PagedResult<User>>>(`${apiConfig.authBaseUrl}/User`, { params });
+  }
+
+  getAllSolutionCenter(): Observable<ApiResponse<SolutionCenter[]>> {
+    return this.http.get<ApiResponse<SolutionCenter[]>>(`${apiConfig.authBaseUrl}/Authentication/SolutionCenters`);
   }
 
   create(data: UserCreate): Observable<ApiResponse<object>> {

@@ -3,6 +3,7 @@ import { MenuOption } from './menu-option.model';
 export interface Role {
   idRole: number;
   nameRole: string;
+  roleCode: string | null;
   statusRole: number;
 }
 

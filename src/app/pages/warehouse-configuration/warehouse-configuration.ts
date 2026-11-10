@@ -63,6 +63,12 @@ export class WarehouseConfiguration implements OnInit {
     this.loadSolutionCenters();
   }
 
+  get canCreateSection(): boolean {
+    const role = this.sessionService.getUser() ?.nameRole ?.trim().toUpperCase() ?? '';
+    
+    return [ 'COSTOS', 'CONTROL INTERNO', 'ADMINISTRADOR', 'ALMACEN' ].includes(role);
+  }
+
   loadSolutionCenters(page = this.page(), take = this.take()): void {
     const user = this.sessionService.getUser();
 
@@ -93,8 +99,6 @@ export class WarehouseConfiguration implements OnInit {
             this.solutionCenters.set([]);
             this.total.set(0);
             this.pages.set(0);
-
-            this.responseModalService.show('error', 'Error al cargar centros de solución', response.message || 'No fue posible consultar los centros de solución.');
             return;
           }
 

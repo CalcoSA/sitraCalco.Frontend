@@ -6,6 +6,7 @@ import { ResponseModalService } from '../../services/response-modal.service';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { User, SolutionCenter } from '../../models/user.model';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +18,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { EMPTY, finalize, switchMap } from 'rxjs';
 import { Role } from '../../models/role.model';
-import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-users',
@@ -46,10 +46,12 @@ export class Users {
 
   private readonly responseModalService = inject(ResponseModalService);
   private readonly wordpressUserService = inject(WordpressUserService);
+  readonly solutionCenters = signal<SolutionCenter[]>([]);  
   private readonly formBuilder = inject(FormBuilder);
   private readonly userService = inject(UserService);
   private readonly roleService = inject(RoleService);
   readonly selectedUser = signal<User | null>(null);
+  readonly loadingSolutionCenters = signal(false);
   private updateDialogRef?: MatDialogRef<unknown>;
   private readonly dialog = inject(MatDialog);
   readonly loadingRoles = signal(false);
@@ -69,6 +71,7 @@ export class Users {
     'userLogin',
     'userName',
     'nameRole',
+    'solutionCenterName',
     'statusUser',
     'actions',
   ];
@@ -78,11 +81,13 @@ export class Users {
   readonly userForm = this.formBuilder.nonNullable.group({
     userLogin: [''],
     idRole: [0],
+    solutionCenterId: [0],
   });
 
   readonly updateUserForm = this.formBuilder.nonNullable.group({
     idRole: [0],
     statusUser: [true],
+    solutionCenterId: [0],
   });
 
   ngOnInit(): void {
@@ -213,10 +218,82 @@ export class Users {
       });
   }
 
+  isPdvRole(): boolean {
+    const idRole = this.userForm.controls.idRole.value;
+    const selectedRole = this.roles().find(role => role.idRole === idRole);
+
+    return selectedRole?.roleCode?.toUpperCase() === 'PDV';
+  }
+
+  onRoleChange(): void {
+    this.validationError = '';
+    this.userForm.controls.solutionCenterId.setValue(0);
+
+    if (this.isPdvRole() && this.solutionCenters().length === 0) {
+      this.loadSolutionCenters();
+    }
+  }
+
+  isUpdatePdvRole(): boolean {
+    const idRole = this.updateUserForm.controls.idRole.value;
+    const selectedRole = this.roles().find(role => role.idRole === idRole);
+
+    return selectedRole?.roleCode?.toUpperCase() === 'PDV';
+  }
+
+  onUpdateRoleChange(): void {
+    this.updateValidationError = '';
+    this.updateUserForm.controls.solutionCenterId.setValue(0);
+
+    if (this.isUpdatePdvRole() && this.solutionCenters().length === 0) {
+      this.loadSolutionCenters();
+    }
+  }
+
+  loadSolutionCenters(): void {
+
+    if (this.loadingSolutionCenters()) {
+      return;
+    }
+
+    this.loadingSolutionCenters.set(true);
+    this.userService
+      .getAllSolutionCenter()
+      .pipe(
+        finalize(() => {
+          this.loadingSolutionCenters.set(false);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+
+          if (!response.isSuccess) {
+            this.solutionCenters.set([]);
+            this.responseModalService.show('error', 'Error al cargar puntos de venta', response.message || 'No fue posible consultar los puntos de venta.');
+            return;
+          }
+
+          this.solutionCenters.set(response.result ?? []);
+        },
+
+        error: (error) => {
+          this.solutionCenters.set([]);
+
+          const message = error.status === 0
+            ? 'No fue posible comunicarse con el servidor.'
+            : error.error?.message || 'Ocurrió un error al consultar los puntos de venta.';
+
+          this.responseModalService.show('error', 'Error al cargar puntos de venta', message);
+        },
+      });
+  }
+
   createUser(): void {
     this.validationError = '';
+
     const userLogin = this.userForm.controls.userLogin.value.trim();
     const idRole = this.userForm.controls.idRole.value;
+    const solutionCenterId = this.userForm.controls.solutionCenterId.value;
 
     if (!userLogin) {
       this.validationError = 'Debes ingresar el usuario de intranet.';
@@ -230,6 +307,30 @@ export class Users {
 
     if (idRole <= 0) {
       this.validationError = 'Debes seleccionar un rol.';
+      return;
+    }
+
+    if (this.loadingRoles()) {
+      this.validationError = 'Espera mientras se cargan los roles.';
+      return;
+    }
+
+    const selectedRole = this.roles().find(role => role.idRole === idRole);
+
+    if (!selectedRole) {
+      this.validationError = 'Debes seleccionar un rol válido.';
+      return;
+    }
+
+    const isPdv = selectedRole.roleCode?.toUpperCase() === 'PDV';
+
+    if (isPdv && solutionCenterId <= 0) {
+      this.validationError = 'Debes seleccionar un punto de venta.';
+      return;
+    }
+
+    if (isPdv && !this.solutionCenters().some(center => center.solutionCenterId === solutionCenterId)) {
+      this.validationError = 'Debes seleccionar un punto de venta válido.';
       return;
     }
 
@@ -250,10 +351,12 @@ export class Users {
           return this.userService.create({
             wordpressUserId: wordpressUser.wordpressUserId,
             userLogin: wordpressUser.wordpressUserLogin,
-            userName:  wordpressUser.wordpressDisplayName,
+            userName: wordpressUser.wordpressDisplayName,
             statusUser: true,
             idRole,
+            solutionCenterId: isPdv ? solutionCenterId : 0,
           });
+
         }),
 
         finalize(() => {
@@ -272,13 +375,14 @@ export class Users {
           this.userForm.reset({
             userLogin: '',
             idRole: 0,
+            solutionCenterId: 0,
           });
 
           this.loadUsers(this.page(), this.take(), this.searchControl.value.trim());
           this.responseModalService.show('success', 'Usuario autorizado', response.message || 'Usuario autorizado correctamente.');
         },
-        error: (error) => {
 
+        error: (error) => {
           const message = error.status === 0
             ? 'No fue posible comunicarse con el servidor.'
             : error.error?.message || error.message || 'Ocurrió un error al autorizar el usuario.';
@@ -291,10 +395,17 @@ export class Users {
   openUpdateModal(user: User): void {
     this.selectedUser.set(user);
     this.updateValidationError = '';
+
     this.updateUserForm.reset({
       idRole: user.idRole,
       statusUser: user.statusUser,
+      solutionCenterId: user.solutionCenterId ?? 0,
     });
+
+    if (this.isUpdatePdvRole() && this.solutionCenters().length === 0) {
+      this.loadSolutionCenters();
+    }
+
     this.updateDialogRef = this.dialog.open(
       this.updateUserModal,
       {
@@ -326,19 +437,53 @@ export class Users {
 
     const idRole = this.updateUserForm.controls.idRole.value;
     const statusUser = this.updateUserForm.controls.statusUser.value;
+    const solutionCenterId = this.updateUserForm.controls.solutionCenterId.value;
 
     if (idRole <= 0) {
       this.updateValidationError = 'Debes seleccionar un rol.';
       return;
     }
 
+    if (this.loadingRoles()) {
+      this.updateValidationError = 'Espera mientras se cargan los roles.';
+      return;
+    }
+
+    const selectedRole = this.roles().find(
+      role => role.idRole === idRole
+    );
+
+    if (!selectedRole) {
+      this.updateValidationError = 'Debes seleccionar un rol válido.';
+      return;
+    }
+
+    const isPdv = selectedRole.roleCode?.toUpperCase() === 'PDV';
+
+    if (isPdv && this.loadingSolutionCenters()) {
+      this.updateValidationError = 'Espera mientras se cargan los puntos de venta.';
+      return;
+    }
+
+    if (isPdv && solutionCenterId <= 0) {
+      this.updateValidationError = 'Debes seleccionar un punto de venta.';
+      return;
+    }
+
+    if (isPdv && !this.solutionCenters().some(center => center.solutionCenterId === solutionCenterId)) {
+      this.updateValidationError = 'Debes seleccionar un punto de venta válido.';
+      return;
+    }
+
     this.updating.set(true);
     this.updateUserForm.disable();
+
     this.userService
       .update({
         idUser: user.idUser,
         statusUser,
         idRole,
+        solutionCenterId: isPdv ? solutionCenterId : 0,
       })
       .pipe(
         finalize(() => {
@@ -357,12 +502,10 @@ export class Users {
           this.updateDialogRef?.close();
           this.selectedUser.set(null);
           this.loadUsers(this.page(), this.take(), this.searchControl.value.trim());
-          this.responseModalService.show('success', 'Usuario actualizado', response.message || 'Usuario actualizado correctamente.'
-          );
+          this.responseModalService.show('success', 'Usuario actualizado', response.message || 'Usuario actualizado correctamente.');
         },
 
         error: (error) => {
-
           const message = error.status === 0
             ? 'No fue posible comunicarse con el servidor.'
             : error.error?.message || 'Ocurrió un error al actualizar el usuario.';

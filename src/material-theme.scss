@@ -99,6 +99,18 @@ html {
     selected-icon-color: #4b2e1f,
     unselected-icon-color: #d9d0c8,
   ));
+  @include mat.tabs-overrides((
+    active-indicator-color: #4b2e1f,
+    active-focus-indicator-color: #4b2e1f,
+    active-hover-indicator-color: #4b2e1f,
+    active-label-text-color: #4b2e1f,
+    active-focus-label-text-color: #4b2e1f,
+    active-hover-label-text-color: #4b2e1f,
+    inactive-label-text-color: #6f4f3d,
+    inactive-focus-label-text-color: #4b2e1f,
+    inactive-hover-label-text-color: #4b2e1f,
+    divider-color: #e0cdbb,
+  ));
 }
 
 .mat-mdc-table .mat-mdc-row:hover {
