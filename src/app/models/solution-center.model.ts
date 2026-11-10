@@ -28,8 +28,7 @@ export interface SectionProductCreate {
 }
 
 export interface SectionConfigurationCreate {
-  sectionName: string;
-  createdBy: string;
+  id_section: number;
   products: SectionProductCreate[];
 }
 
@@ -51,6 +50,7 @@ export interface SolutionCenterSection {
   sectionId: number;
   sectionName: string;
   isActive: boolean;
+  assignmentIsActive: boolean;
   products: SolutionCenterSectionProduct[];
 }
 
@@ -68,4 +68,59 @@ export interface SolutionCenterSectionProduct {
 
 export interface SolutionCenterStatusUpdate {
   isActive: boolean;
+}
+
+export interface SolutionCenterUpdate {
+  solutionCenterCode: string;
+  solutionCenterName: string;
+}
+
+export interface SolutionCenterUpdateResult {
+  solutionCenterId: number;
+  solutionCenterCode: string;
+  solutionCenterName: string;
+}
+
+export interface SolutionCenterSectionAssignmentResult {
+  solutionCenterId: number;
+  sectionId: number;
+  isActive: boolean;
+}
+
+export interface SolutionCenterSectionStatusUpdate {
+  isActive: boolean;
+}
+
+export interface SolutionCenterProductOrderUpdate {
+  newPosition: number;
+}
+
+export interface SolutionCenterProductOrderUpdateResult {
+  solutionCenterProductId: number;
+  newPosition: number;
+}
+
+export interface SolutionCenterSectionProductAdd {
+  productId: number;
+  position: number;
+}
+
+export interface SolutionCenterSectionProductAddResult {
+  solutionCenterProductId: number;
+  solutionCenterId: number;
+  sectionId: number;
+  productId: number;
+  position: number;
+}
+
+export interface SolutionCenterSectionProductDeleteResult {
+  solutionCenterProductId: number;
+  solutionCenterId: number;
+  sectionId: number;
+}
+
+export interface SolutionCenterSectionRemoveResult {
+  solutionCenterId: number;
+  sectionId: number;
+  deletedProducts: number;
 }
