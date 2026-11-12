@@ -1,0 +1,764 @@
+<div class="container-fluid px-0">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        move_to_inbox
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Recepción de materias primas
+      </h2>
+    </div>
+    @if (receptionCreated()) {
+      <button mat-flat-button type="button" [disabled]="savingReception() || savingLot() || savingEvaluation()" (click)="finishReception()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+        <span class="d-inline-flex align-items-center gap-2 pt-1">
+          <mat-icon>
+            task_alt
+          </mat-icon>
+          <span>
+            Terminar recepción
+          </span>
+        </span>
+      </button>
+    }
+  </div>
+  <div class="border rounded-4 p-3 p-lg-4" style="background-color: #fffdf8; border-color: #e0cdbb !important;">
+    <div class="row g-3 align-items-center">
+      <div class="col-12">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+          <mat-label>
+            Tipo de recepción
+          </mat-label>
+          <input matInput type="text" autocomplete="off" placeholder="Buscar tipo de recepción..." [formControl]="receptionTypeControl" [matAutocomplete]="receptionTypeAutocomplete" />
+          @if (loadingReceptionTypes()) {
+            <mat-spinner matSuffix [diameter]="18"></mat-spinner>
+          }
+          <mat-autocomplete #receptionTypeAutocomplete="matAutocomplete" [displayWith]="displayReceptionType" (optionSelected)="selectReceptionType($event.option.value)">
+            @for (receptionType of receptionTypes(); track receptionType.reception_type_id) {
+              <mat-option [value]="receptionType">
+                {{ receptionType.name }}
+                @if (receptionType.form_code) {
+                  - {{ receptionType.form_code }}
+                }
+              </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+    </div>
+    @if (selectedReceptionType) {
+      <div class="row g-3 align-items-center mt-1">
+        <div class="col-12 col-xl-4">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>
+              Proveedor
+            </mat-label>
+            <input matInput type="text" autocomplete="off" placeholder="Buscar proveedor..." [formControl]="supplierControl" [matAutocomplete]="supplierAutocomplete" />
+            @if (loadingSuppliers()) {
+              <mat-spinner matSuffix [diameter]="18"></mat-spinner>
+            }
+            <mat-autocomplete #supplierAutocomplete="matAutocomplete" [displayWith]="displaySupplier" (optionSelected)="selectSupplier($event.option.value)">
+              @for ( supplier of suppliers(); track supplier.supplier_id) {
+                <mat-option [value]="supplier">
+                  {{ supplier.supplier_code }} - {{ supplier.name }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-xl-6">
+          <div class="d-flex flex-column flex-xl-row align-items-start align-items-xl-center gap-1 gap-xl-2">
+            <span class="fw-semibold" style="color: #4b2e1f; font-size: 14px;">
+              Condiciones de transporte:
+            </span>
+            <mat-radio-group class="d-flex flex-wrap align-items-center" [formControl]="transportConditionsControl">
+              <mat-radio-button [value]="true">
+                Cumple
+              </mat-radio-button>
+              <mat-radio-button [value]="false">
+                No cumple
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+        </div>
+        <div class="col-12 col-xl-2">
+          <div class="d-flex justify-content-xl-end">            
+            <button mat-flat-button type="button" [disabled]="receptionCreated() || savingReception()" (click)="createReception()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+              @if (savingReception()) {
+                <span class="d-flex align-items-center gap-2">
+                  <span class="spinner-border spinner-border-sm"></span>
+                  Creando...
+                </span>
+              } @else {
+                <span class="d-inline-flex align-items-center gap-2 pt-2">
+                  <mat-icon>add_circle</mat-icon>
+                  <span>Crear</span>
+                </span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+    @if (validationError) {
+      <div class="d-flex align-items-center gap-3 mt-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ validationError }}
+        </span>
+      </div>
+    }
+    @if (receptionCreated()) {
+      <hr class="my-3" style="border-color: #e0cdbb; opacity: 1;" />
+      <div class="row g-3 align-items-center">
+        <div class="col-12">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+            <mat-label>
+              Producto
+            </mat-label>
+            <input matInput type="text" autocomplete="off" placeholder="Buscar producto..." [formControl]="productControl" [matAutocomplete]="productAutocomplete" />
+            @if (loadingProducts()) {
+              <mat-spinner matSuffix [diameter]="18"></mat-spinner>
+            }
+            <mat-autocomplete #productAutocomplete="matAutocomplete" [displayWith]="displayProduct" (optionSelected)="selectProduct($event.option.value)">
+              @for ( product of products(); track product.product_id) {
+                <mat-option [value]="product">
+                  {{ product.product_reference.trim() }} - {{ product.product_name }} - {{ product.unit_of_measure }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+      </div>
+      @if (selectedProduct) {
+        <div class="row g-3 mt-2">
+          <div class="col-12 col-md-4">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+              <mat-label>
+                Número de lote
+              </mat-label>
+              <input matInput type="text" [formControl]="lotNumberControl" placeholder="Número de lote" />
+            </mat-form-field>
+          </div>
+          <div class="col-12 col-md-4">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+              <mat-label>
+                Tamaño del lote KG/LT
+              </mat-label>
+              <input matInput type="number" min="1" [formControl]="lotSizeControl" />
+            </mat-form-field>
+          </div>
+          <div class="col-12 col-md-4">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+              <mat-label>
+                Cantidad de unidades
+              </mat-label>
+              <input matInput type="number" min="1" step="1" [formControl]="unitCountControl" />
+            </mat-form-field>
+          </div>
+          @if (requiresGuide) {
+            <div class="col-12 col-md-6">
+              <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>
+                  Número de guía
+                </mat-label>
+                <input matInput type="text" [formControl]="guideNumberControl" placeholder="Ingrese el número de guía" />
+              </mat-form-field>
+            </div>
+          }
+          @if (requiresShelfLife) {
+            <div class="col-12 col-md-6">
+              <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+                <mat-label>
+                  Fecha de vencimiento
+                </mat-label>
+                <input matInput type="date" [formControl]="expirationDateControl" />
+              </mat-form-field>
+              @if (expirationDateControl.value) {
+                <div class="mt-2 d-flex align-items-start gap-2" style="color: #4b2e1f;">
+                  <mat-icon style="flex-shrink: 0; width: 24px; height: 24px; font-size: 24px; line-height: 24px; margin: 0; transform: none;">
+                    {{ shelfLifeCompliant ? 'check_circle' : 'warning_amber' }}
+                  </mat-icon>
+                  <span style="min-width: 0; line-height: 24px; overflow-wrap: break-word;">
+                    Vida útil restante: {{ shelfLifeDaysRemaining }} días.
+                    Mínimo requerido: {{ minimumShelfLifeDays }} días.
+                    {{ shelfLifeCompliant ? 'Cumple.' : 'No cumple.' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        @if (lotValidationError) {
+          <div class="d-flex align-items-center gap-3 mt-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+            <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+              warning_amber
+            </mat-icon>
+            <span>
+              {{ lotValidationError }}
+            </span>
+          </div>
+        }
+        @if (showLotActions) {
+          <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mt-4">
+            @if (shelfLifeCompliant) {
+              <button mat-flat-button type="button" [disabled]="savingLot()" (click)="saveApprovedLot()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+                @if (savingLot()) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                  Guardando...
+                } @else {
+                  <span class="d-inline-flex align-items-center gap-2 pt-2">
+                    <mat-icon>
+                      save
+                    </mat-icon>
+                    <span>
+                      Guardar
+                    </span>
+                  </span>
+                }
+              </button>
+            } @else {
+              <button mat-stroked-button type="button" [disabled]="savingLot()" (click)="openShelfLifeComments()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 18px;">
+                <mat-icon>
+                  pending_actions
+                </mat-icon>
+                Condicional
+              </button>
+              <button mat-flat-button type="button" [disabled]="savingLot()" (click)="openShelfLifeNonconformity()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px;">
+                <mat-icon>
+                  block
+                </mat-icon>
+                Rechazar
+              </button>
+            }
+          </div>
+        }
+        @if (lotSaved() && requiresEvaluation) {
+          <hr class="my-3" style="border-color: #e0cdbb; opacity: 1;" />
+          @if (createdLot()?.requires_temperature) {
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-4">
+                <mat-form-field
+                  appearance="outline"
+                  floatLabel="always"
+                  subscriptSizing="dynamic"
+                  class="w-100"
+                  [style.--mat-form-field-outlined-outline-color]="getTemperatureBorderColor(temperatureStartControl.value)"
+                  [style.--mat-form-field-outlined-hover-outline-color]="getTemperatureBorderColor(temperatureStartControl.value)"
+                  [style.--mat-form-field-outlined-focus-outline-color]="getTemperatureBorderColor(temperatureStartControl.value)"
+                  [style.--mat-form-field-outlined-label-text-color]="getTemperatureBorderColor(temperatureStartControl.value)"
+                  [style.--mat-form-field-outlined-focus-label-text-color]="getTemperatureBorderColor(temperatureStartControl.value)"
+                  style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;"
+                >
+                  <mat-label>
+                    Temperatura inicial (°C)
+                  </mat-label>
+                  <input matInput type="number" step="any" [formControl]="temperatureStartControl" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-4">
+                <mat-form-field
+                  appearance="outline"
+                  floatLabel="always"
+                  subscriptSizing="dynamic"
+                  class="w-100"
+                  [style.--mat-form-field-outlined-outline-color]="getTemperatureBorderColor(temperatureMiddleControl.value)"
+                  [style.--mat-form-field-outlined-hover-outline-color]="getTemperatureBorderColor(temperatureMiddleControl.value)"
+                  [style.--mat-form-field-outlined-focus-outline-color]="getTemperatureBorderColor(temperatureMiddleControl.value)"
+                  [style.--mat-form-field-outlined-label-text-color]="getTemperatureBorderColor(temperatureMiddleControl.value)"
+                  [style.--mat-form-field-outlined-focus-label-text-color]="getTemperatureBorderColor(temperatureMiddleControl.value)"
+                  style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;"
+                >
+                  <mat-label>
+                    Temperatura intermedia (°C)
+                  </mat-label>
+                  <input matInput type="number" step="any" [formControl]="temperatureMiddleControl" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-4">
+                <mat-form-field
+                  appearance="outline"
+                  floatLabel="always"
+                  subscriptSizing="dynamic"
+                  class="w-100"
+                  [style.--mat-form-field-outlined-outline-color]="getTemperatureBorderColor(temperatureEndControl.value)"
+                  [style.--mat-form-field-outlined-hover-outline-color]="getTemperatureBorderColor(temperatureEndControl.value)"
+                  [style.--mat-form-field-outlined-focus-outline-color]="getTemperatureBorderColor(temperatureEndControl.value)"
+                  [style.--mat-form-field-outlined-label-text-color]="getTemperatureBorderColor(temperatureEndControl.value)"
+                  [style.--mat-form-field-outlined-focus-label-text-color]="getTemperatureBorderColor(temperatureEndControl.value)"
+                  style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;"
+                >
+                  <mat-label>
+                    Temperatura final (°C)
+                  </mat-label>
+                  <input matInput type="number" step="any" [formControl]="temperatureEndControl" />
+                </mat-form-field>
+              </div>
+            </div>
+          }
+          @if (createdLot()?.requires_visual_inspection) {
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-4">
+                <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+                  <mat-label>
+                    Unidades inspeccionadas
+                  </mat-label>
+                  <input matInput type="number" min="1" step="1" [formControl]="inspectedUnitsControl" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-4">
+                <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+                  <mat-label>
+                    Unidades conformes
+                  </mat-label>
+                  <input matInput type="number" min="0" step="1" [formControl]="compliantUnitsControl" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-4">
+                <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="--mat-form-field-container-height: 44px; --mat-form-field-container-vertical-padding: 10px;">
+                  <mat-label>
+                    Unidades no conformes
+                  </mat-label>
+                  <input matInput type="number" min="0" step="1" [formControl]="nonCompliantUnitsControl" />
+                </mat-form-field>
+              </div>
+            </div>
+          }
+          @if (evaluationValidationError) {
+            <div class="d-flex align-items-center gap-3 mt-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+              <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+                warning_amber
+              </mat-icon>
+              <span>
+                {{ evaluationValidationError }}
+              </span>
+            </div>
+          }
+          <div class="d-flex justify-content-end mt-3">
+            <button mat-flat-button type="button" [disabled]="savingEvaluation() || evaluationSaved()" (click)="submitEvaluation()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+              @if (savingEvaluation()) {
+                Guardando...
+              } @else if (evaluationSaved()) {
+                Evaluación registrada
+              } @else {
+                <span class="d-inline-flex align-items-center gap-2 pt-2">
+                  <mat-icon>
+                    {{ evaluationAction === 'REJECTED' ? 'block' : evaluationAction === 'CONDITIONAL' ? 'pending_actions' : 'save' }}
+                  </mat-icon>
+                  <span>
+                    {{ evaluationButtonLabel }}
+                  </span>
+                </span>
+              }
+            </button>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>
+
+@if (receptionDetail()?.lots?.length) {
+  <section class="border rounded-4 p-3 p-lg-4 mt-4" style="background-color: #fffdf8; border-color: #e0cdbb !important;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <mat-icon style="color: #4b2e1f;">
+          inventory_2
+        </mat-icon>
+        <div>
+          <h3 class="m-0 fs-5 fw-semibold" style="color: #4b2e1f;">
+            Lotes registrados
+          </h3>
+          <small style="color: #7a6252;">
+            Recepción N.º {{ receptionDetail()?.reception_number }}
+          </small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge rounded-pill px-3 py-2" style="background-color: #f0e5d9; color: #4b2e1f;">
+          {{ receptionDetail()!.lots.length }} lotes
+        </span>
+      </div>
+    </div>
+    <div class="d-flex flex-column gap-2">
+      @for (lot of receptionDetail()!.lots; track lot.reception_lot_id) {
+        <div class="border rounded-3 overflow-hidden" style="border-color: #e0cdbb !important; background-color: white;">
+          <button type="button" class="btn w-100 text-start p-3" (click)="toggleLotDetail(lot.reception_lot_id)">
+            <div class="d-flex justify-content-between align-items-center gap-3">
+              <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                  <strong style="color: #4b2e1f;">
+                    Lote {{ lot.lot_number }}
+                  </strong>
+                  <span class="badge rounded-pill"
+                        [style.background-color]="
+                          lot.lot_status === 'APPROVED' ? '#e6f4ea' :
+                          lot.lot_status === 'REJECTED' ? '#fce8e6' : '#fff3e0'"
+                        [style.color]="
+                          lot.lot_status === 'APPROVED' ? '#2e7d32' :
+                          lot.lot_status === 'REJECTED' ? '#b3261e' : '#986100'">
+                    {{ getLotStatusLabel(lot.lot_status) }}
+                  </span>
+                </div>
+                <div style="color: #4b2e1f;">
+                  {{ lot.product_name || 'Producto sin nombre' }}
+                </div>
+                <small style="color: #7a6252;">
+                  {{ lot.product_reference.trim() }} ·
+                  {{ lot.unit_count ?? '—' }} unidades ·
+                  {{ lot.unit_of_measure }}
+                </small>
+              </div>
+              <mat-icon style="color: #4b2e1f;">
+                {{ expandedLotId() === lot.reception_lot_id ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </div>
+          </button>
+          @if (expandedLotId() === lot.reception_lot_id) {
+            <div class="p-3 border-top" style="background-color: #fffdf8; border-color: #e0cdbb !important;">
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-4">
+                  <small class="text-muted d-block">
+                    Número de guía
+                  </small>
+                  <strong>
+                    {{ lot.guide_number || 'No aplica' }}
+                  </strong>
+                </div>
+                <div class="col-12 col-md-4">
+                  <small class="text-muted d-block">
+                    Fecha de vencimiento
+                  </small>
+                  <strong>
+                    {{ lot.expiration_date || 'No aplica' }}
+                  </strong>
+                </div>
+                <div class="col-12 col-md-4">
+                  <small class="text-muted d-block">
+                    Tamaño del lote KG/LT
+                  </small>
+                  <strong>
+                    {{ lot.lot_size ?? 'No registrado' }}
+                  </strong>
+                </div>
+                <div class="col-12 col-md-4">
+                  <small class="text-muted d-block">
+                    Cantidad de unidades
+                  </small>
+                  <strong>
+                    {{ lot.unit_count ?? 'No registrado' }}
+                  </strong>
+                </div>
+                <div class="col-12 col-md-4">
+                  <small class="text-muted d-block">
+                    Vida útil
+                  </small>
+                  <strong>
+                    {{ lot.shelf_life === null ? 'No aplica' : lot.shelf_life ? 'Cumple' : 'No cumple' }}
+                  </strong>
+                </div>
+                @if (lot.shelf_life_comments) {
+                  <div class="col-12">
+                    <small class="text-muted d-block">
+                      Observaciones de vida útil
+                    </small>
+                    <span>
+                      {{ lot.shelf_life_comments }}
+                    </span>
+                  </div>
+                }
+              </div>
+              @if (lot.temperature_measurements.length) {
+                <h4 class="fs-6 fw-semibold mb-3" style="color: #4b2e1f;">
+                  Control de temperatura
+                </h4>
+                <div class="row g-2 mb-3">
+                  @for (point of ['START', 'MIDDLE', 'END']; track point) {
+                    @for (measurement of lot.temperature_measurements; track measurement.temperature_measurement_id) {
+                      @if (measurement.measurement_point === point) {
+                        <div class="col-12 col-md-4">
+                          <div class="border rounded-3 p-3 text-center h-100" style="border-color: #e0cdbb !important; background: white;">
+                            <small class="d-block text-muted">
+                              {{ getTemperaturePointLabel(measurement.measurement_point) }}
+                            </small>
+                            <div class="fs-4 fw-bold my-1"
+                                 [style.color]="
+                                   measurement.temperature_status === 'IDEAL' ? '#2e7d32' :
+                                   measurement.temperature_status === 'REJECTED' ? '#b3261e' : '#986100'">
+                              {{ measurement.temperature_celsius }} °C
+                            </div>
+                            <small>
+                              {{ getTemperatureStatusLabel(measurement.temperature_status) }}
+                            </small>
+                            @if (measurement.comments) {
+                              <p class="small mt-2 mb-0">
+                                {{ measurement.comments }}
+                              </p>
+                            }
+                          </div>
+                        </div>
+                      }
+                    }
+                  }
+                </div>
+              }
+              @if (lot.visual_inspection; as inspection) {
+                <h4 class="fs-6 fw-semibold mb-3" style="color: #4b2e1f;">
+                  Inspección visual
+                </h4>
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <div class="border rounded-3 p-3" style="border-color: #e0cdbb !important;">
+                      <small class="d-block text-muted">
+                        Unidades conformes
+                      </small>
+                      <strong style="color: #2e7d32;">
+                        {{ inspection.compliant_units }}
+                      </strong>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="border rounded-3 p-3" style="border-color: #e0cdbb !important;">
+                      <small class="d-block text-muted">
+                        Unidades no conformes
+                      </small>
+                      <strong style="color: #b3261e;">
+                        {{ inspection.non_compliant_units }}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                @if (inspection.comments) {
+                  <p class="small">{{ inspection.comments }}</p>
+                }
+              }
+              @if (lot.nonconformities.length) {
+                <h4 class="fs-6 fw-semibold mt-3" style="color: #4b2e1f;">
+                  Novedades en la Recepción de Productos
+                </h4>
+                @for (item of lot.nonconformities; track item.nonconformity_id) {
+                  <div class="border rounded-3 p-3 mb-2" style="border-color: #e0cdbb !important;">
+                    <strong>
+                      {{ item.nonconformity_number }}
+                    </strong>
+                    <span class="ms-2 badge bg-secondary">
+                      {{
+                        item.status === 'OPEN'
+                          ? 'Abierto'
+                          : item.status === 'CLOSED'
+                            ? 'Cerrado'
+                            : item.status
+                      }}
+                    </span>
+                    <div class="small mt-2">
+                      <div>Motivo: {{ getNonconformityReasonLabel(item.reason_type) }}</div>
+                      <div>Cantidad: {{ item.quantity ?? 'No registrada' }}</div>
+                      <div>Documento: {{ item.document_type || '—' }} {{ item.document_number || '' }}</div>
+                      <div>Observaciones: {{ item.observations }}</div>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
+<ng-template #commentsDialog>
+  <div class="p-3 p-md-4" style="background-color: #fffdf8; color: #4b2e1f;">
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <mat-icon style="color: #4b2e1f; font-size: 26px; width: 26px; height: 26px;">
+        warning_amber
+      </mat-icon>
+      <h2 class="m-0 fs-5 fw-bold" style="color: #4b2e1f;">
+        {{
+          commentsContext === 'TRANSPORT'
+            ? 'Condiciones de Transporte'
+            : commentsContext === 'SHELF_LIFE'
+              ? 'Condiciones de Vida Útil'
+              : 'Condiciones de Temperatura'
+        }}
+      </h2>
+    </div>
+    @if (commentsValidationError) {
+      <div class="d-flex align-items-center gap-3 mb-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ commentsValidationError }}
+        </span>
+      </div>
+    }
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100 mb-4">
+      <mat-label>
+        Comentarios
+      </mat-label>
+      <textarea matInput [formControl]="commentsControl" rows="4" maxlength="1000" placeholder="Escribe las observaciones..."></textarea>
+    </mat-form-field>
+    <div class="d-flex flex-column-reverse flex-sm-row justify-content-end align-items-stretch gap-2">      
+      <button mat-stroked-button type="button" [disabled]="savingReception() || savingLot() || savingEvaluation()" (click)="closeCommentsDialog()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 500;">
+        <mat-icon>
+          close
+        </mat-icon>
+        Cancelar
+      </button>      
+      <button mat-flat-button type="button" [disabled]="savingReception() || savingLot() || savingEvaluation()" (click)="sendReceptionWithComments()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px; font-weight: 600;">
+        @if (savingReception()) {
+          <span class="d-flex align-items-center gap-2">
+            <span class="spinner-border spinner-border-sm"></span>
+            Enviando...
+          </span>
+        } @else {
+          <span class="d-inline-flex align-items-center gap-2 pt-1">
+            <mat-icon>send</mat-icon>
+            <span>Enviar</span>
+          </span>
+        }
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #nonconformityDialog>
+  <div class="p-3 p-md-4" style="background-color: #fffdf8; color: #4b2e1f;">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <mat-icon style="color: #4b2e1f;">
+        description
+      </mat-icon>
+      <h2 class="m-0 fs-5 fw-bold">
+        Novedades en la Recepción de Productos
+      </h2>
+    </div>
+    <div class="d-flex flex-wrap gap-3 mb-4" style="color: #7a6252;">
+      <span>
+        <strong>
+          Código:
+        </strong>
+        CSL-F-PPP-54
+      </span>
+      <span>
+        <strong>
+          Fecha:
+        </strong>
+        {{ today | date:'dd/MM/yyyy' }}
+      </span>
+    </div>
+    @if (nonconformityValidationError) {
+      <div class="d-flex align-items-center gap-3 mb-3" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ nonconformityValidationError }}
+        </span>
+      </div>
+    }
+    <div class="mb-3">
+      <div class="fw-semibold mb-2">
+        Tipo de documento
+      </div>
+      <mat-radio-group class="d-flex flex-wrap align-items-center gap-2" [formControl]="documentTypeControl" (change)="selectDocumentType($event.value)">
+        <mat-radio-button value="SIN FACTURA" [disabled]="!!otherDocumentTypeControl.value.trim()">
+          Sin factura
+        </mat-radio-button>
+        <mat-radio-button value="N.C" [disabled]="!!otherDocumentTypeControl.value.trim()">
+          N.C
+        </mat-radio-button>
+        <mat-radio-button value="C.M.M" [disabled]="!!otherDocumentTypeControl.value.trim()">
+          C.M.M
+        </mat-radio-button>
+      </mat-radio-group>
+    </div>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Otros
+          </mat-label>
+          <input matInput [formControl]="otherDocumentTypeControl" [disabled]="!!documentTypeControl.value" (input)="onOtherDocumentTypeChange()" placeholder="Otro tipo de documento" />
+        </mat-form-field>
+      </div>
+      <div class="col-12 col-md-6">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Número de documento
+          </mat-label>
+          <input matInput [formControl]="documentNumberControl" placeholder="Ingrese el número" />
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="border rounded-4 p-3 my-3" style="border-color: #e0cdbb !important;">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="fw-semibold">
+            Producto
+          </div>
+          <div>
+            {{ selectedProduct?.product_name }}
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="fw-semibold">
+            Unidad de medida
+          </div>
+          <div>
+            {{ selectedProduct?.unit_of_measure }}
+          </div>
+        </div>
+        @if (nonconformityContext === 'LOT') {
+          <div class="col-12 col-md-3">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Cantidad
+              </mat-label>
+              <input matInput type="number" min="0" [formControl]="quantityControl" />
+            </mat-form-field>
+          </div>
+        }
+      </div>
+    </div>
+    @if (showConditionalTemperatureComments) {
+      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100 mb-3">
+        <mat-label>
+          Comentarios de temperatura condicional
+        </mat-label>
+        <textarea matInput rows="3" maxlength="1000" [formControl]="conditionalTemperatureCommentsControl" placeholder="Explique las temperaturas en rango condicional..."></textarea>
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100 mb-4">
+      <mat-label>
+        Observaciones
+      </mat-label>
+      <textarea matInput rows="4" maxlength="1000" [formControl]="nonconformityCommentsControl" placeholder="Describa la novedad encontrada...">
+      </textarea>
+    </mat-form-field>
+    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+      <button mat-stroked-button type="button" [disabled]="savingLot() || savingEvaluation()" (click)="closeNonconformityDialog()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 18px;">
+        <mat-icon>
+          close
+        </mat-icon>
+        Cancelar
+      </button>
+      <button mat-flat-button type="button" [disabled]="savingLot() || savingEvaluation()" (click)="sendRejectedLot()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 40px; padding: 0 18px;">
+        @if (savingLot()) {
+          <span class="spinner-border spinner-border-sm"></span>
+          Enviando...
+        } @else {
+          <span class="d-inline-flex align-items-center gap-2 pt-1">
+            <mat-icon>
+              send
+            </mat-icon>
+            <span>
+              Enviar
+            </span>
+          </span>
+        }
+      </button>
+    </div>
+  </div>
+</ng-template>
