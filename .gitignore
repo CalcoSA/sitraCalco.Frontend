@@ -45,11 +45,6 @@ __screenshots__/
 .env.*
 !.env.example
 
-# Angular generated environments
-src/environments/environment.ts
-src/environments/environment.*.ts
-!src/environments/environment.example.ts
-
 # =========================================================
 # Credentials / certificates / private keys
 # =========================================================

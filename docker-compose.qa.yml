@@ -1,3 +1,5 @@
+name: sitracalco-frontend-qa
+
 services:
   frontend:
     build:
