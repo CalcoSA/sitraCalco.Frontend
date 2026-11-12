@@ -1,0 +1,65 @@
+<div class="min-vh-100 d-flex align-items-center justify-content-center px-3 py-4" style="background-color: #fffdf8;">
+  <mat-card class="w-100 overflow-hidden p-0" style="background-color: #fffdf8; max-width: 460px; border: 1px solid #e0cdbb; border-radius: 46px; box-shadow: none;">
+    <div class="text-center px-4 py-4" style=" background-color: #4b2e1f; color: #f7e8d8;">
+      <img src="/images/MonedaCrepes.png" alt="Crepes & Waffles" style=" width: 110px; height: 110px; object-fit: contain; margin-bottom: 18px;" />
+      <div class="d-flex justify-content-center align-items-center gap-2">
+        <mat-icon style="font-size: 32px; width: 32px; height: 32px;">
+          coffee
+        </mat-icon>
+        <h1 class="mt-2" style=" font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif; font-size: 21px; font-weight: 900;">
+          SITRA CALCO S.A
+        </h1>
+      </div>
+      <p class="mb-0 mt-2" style=" font-size: 14px; color: #ead9c9;">
+        Inicia sesión con tu usuario de intranet.
+      </p>
+    </div>
+    <div style="padding: 32px;">
+      <form [formGroup]="loginForm" (ngSubmit)="handleLogin()" >
+        @if (validationError) {
+          <div class="d-flex align-items-center gap-3 mb-4" role="alert" style=" background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 16px 20px; min-height: 58px; font-size: 16px;">
+            <mat-icon style=" color: #ef7d00; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0;">
+              warning_amber
+            </mat-icon>
+            <span>
+              {{ validationError }}
+            </span>
+          </div>
+        }
+        <mat-form-field appearance="outline" floatLabel="always" class="w-100 mb-2">
+          <mat-label>Usuario o correo</mat-label>
+          <mat-icon matPrefix style=" color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+            person_outline
+          </mat-icon>
+          <input matInput formControlName="username" autocomplete="username" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" floatLabel="always" class="w-100 mb-2">
+          <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix style=" color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+            lock_outline
+          </mat-icon>
+          <input matInput type="password" formControlName="password" autocomplete="current-password" />
+        </mat-form-field>
+        <button mat-flat-button type="submit" class="w-100" [disabled]="loading"
+          [style.background-color]="loading ? '#dedcd9' : '#4b2e1f'"
+          [style.color]="loading ? '#9e9e9e' : '#ffffff'"
+          style="height: 48px; border-radius: 12px; font-weight: 500; font-size: 14px;"
+        >
+          @if (loading) {
+            <span class="d-flex align-items-center justify-content-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status" style="color: #ffffff;"></span>
+              <span>Ingresando...</span>
+            </span>
+          } @else {
+            <span class="d-flex align-items-center justify-content-center gap-2">
+              <mat-icon style="font-size: 20px; width: 20px; height: 20px;">
+                login
+              </mat-icon>
+              <span>Iniciar sesión</span>
+            </span>
+          }
+        </button>
+      </form>
+    </div>
+  </mat-card>
+</div>

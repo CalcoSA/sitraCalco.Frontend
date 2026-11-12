@@ -1,0 +1,334 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        cookie
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Productos
+      </h2>
+    </div>
+    <button mat-stroked-button type="button" (click)="syncProducts()" [disabled]="syncing() || loading()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 40px; padding: 0 16px; font-weight: 500;">
+      @if (syncing()) {
+        <span class="d-inline-flex align-items-center justify-content-center gap-2" style="line-height: 50px;">
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+          <span> Actualizando...</span>
+        </span>
+      } @else {
+        <span class="d-inline-flex align-items-center justify-content-center gap-2" style="line-height: 50px;">
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+            sync
+          </mat-icon>
+          <span style="line-height: 50px;">
+            Actualizar productos
+          </span>
+        </span>
+      }
+    </button>
+  </div>
+  <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" style="width: 100%; max-width: 320px;">
+      <mat-label>
+        Buscar producto
+      </mat-label>
+      <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+        search
+      </mat-icon>
+      <input matInput [formControl]="searchControl" autocomplete="off" (keyup.enter)="searchProducts()" />
+    </mat-form-field>
+    <button mat-icon-button type="button" matTooltip="Buscar" matTooltipPosition="above" [disabled]="loading()" (click)="searchProducts()" style="width: 44px; height: 44px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 30px; flex-shrink: 0;">
+      <mat-icon>
+        search
+      </mat-icon>
+    </button>
+    <button mat-icon-button type="button" matTooltip="Limpiar" matTooltipPosition="above" [disabled]="loading()" (click)="clearSearch()" style=" width: 44px; height: 44px; color: #4b2e1f; border: 1px solid #8b6a55; border-radius: 30px; flex-shrink: 0;">
+      <mat-icon>
+        cleaning_services
+      </mat-icon>
+    </button>
+  </div>
+  <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8;">
+    @if (loading()) {
+      <div class="d-flex justify-content-center align-items-center py-5">
+        <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table mat-table [dataSource]="products()" class="w-100" style="background-color: #fffdf8; min-width: 980px;">
+          <ng-container matColumnDef="product_name">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 260px;">
+              Producto
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 260px;">
+              {{ product.product_name }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="reference">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 150px;">
+              Referencia
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 150px;">
+              {{ product.reference }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="unit_of_measure">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 170px;">
+              Unidad de medida
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 170px;">
+              {{ product.unit_of_measure }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="factor">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 170px;">
+              Factor
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 170px;">
+              {{ product.f122_factor }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="plan_id">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 120px;">
+              Plan
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 120px;">
+              {{ product.plan_id || '—' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="image_path">
+            <th mat-header-cell *matHeaderCellDef style="color: #4b2e1f; font-weight: 600; min-width: 140px; text-align: center;">
+              Imagen
+            </th>
+            <td mat-cell *matCellDef="let product" style="color: #4b2e1f; min-width: 140px; text-align: center;">
+              @if (product.imageUrl) {
+                <div class="d-flex align-items-center justify-content-center" style="min-height: 64px;">
+                  <img [src]="product.imageUrl" [alt]="product.product_name" style="width: 58px; height: 58px; object-fit: contain; border-radius: 8px;" />
+                </div>
+              } @else {
+                <div class="d-flex align-items-center justify-content-center" matTooltip="Producto sin imagen" matTooltipPosition="above" style="min-height: 64px; color: #8b6a55;">
+                  <mat-icon style="font-size: 38px; width: 38px; height: 38px; line-height: 38px; margin: 0;">
+                    brunch_dining_24
+                  </mat-icon>
+                </div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="text-center" style="min-width: 150px;"></th>
+            <td mat-cell *matCellDef="let product" class="text-center" style=" min-width: 150px;">
+              <button mat-stroked-button type="button" matTooltip="Actualizar producto" matTooltipPosition="above" (click)="openUpdateProductModal(product)" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 20px; font-weight: 500;">
+                <mat-icon>
+                  edit
+                </mat-icon>
+                Actualizar
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background-color: #f7e8d8;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        @if (products().length === 0) {
+          <div class="text-center py-5" style="color: #6b4a3a;">
+            No hay productos para mostrar.
+          </div>
+        }
+      </div>
+      <div class="d-flex flex-wrap align-items-center justify-content-end gap-1 px-3" style="border-top: 1px solid #ebe6e2; color: #4b2e1f; min-height: 64px;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 14px; white-space: nowrap;">
+            Filas por página
+          </span>
+          <button type="button" [matMenuTriggerFor]="pageSizeMenu" [disabled]="loading()" class="paginator-size-button">
+            <span>
+              {{ take() }}
+            </span>
+            <mat-icon>
+              keyboard_arrow_down
+            </mat-icon>
+          </button>
+          <mat-menu #pageSizeMenu="matMenu" class="paginator-size-menu" [overlapTrigger]="false">
+            @for (size of [5, 10, 25, 50]; track size) {
+              <button mat-menu-item type="button" disableRipple (click)="changePageSize(size)" [class.paginator-size-selected]="take() === size">
+                <span>
+                  {{ size }}
+                </span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+        <div style="font-size: 14px; min-width: 90px; text-align: center; white-space: nowrap;">
+          {{ firstItem }}–{{ lastItem }} of {{ total() }}
+        </div>
+        <button mat-icon-button type="button" matTooltip="Página anterior" matTooltipPosition="above" [disabled]="page() <= 1 || loading()" (click)="previousPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_left
+          </mat-icon>
+        </button>
+        <button mat-icon-button type="button" matTooltip="Página siguiente" matTooltipPosition="above" [disabled]="page() >= pages() || pages() <= 1 || loading()" (click)="nextPage()" style="width: 40px; height: 40px;">
+          <mat-icon>
+            chevron_right
+          </mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+<ng-template #updateProductModal>
+  <div style="background-color: #fffdf8;">
+    <div mat-dialog-title class="d-flex align-items-center gap-2 mt-3" style="color: #4b2e1f; font-size: 21px; font-weight: 600;">
+      <mat-icon>
+        edit
+      </mat-icon>
+      <span>
+        Actualizar producto
+      </span>
+    </div>
+    <mat-dialog-content style="max-height: 72vh; overflow-y: auto; padding-bottom: 8px;">
+      @if (imageValidationError) {
+        <div class="d-flex align-items-center gap-2 mb-4" role="alert" style="background-color: #fff4e5; color: #7a4300; border-radius: 12px; padding: 12px 16px; font-size: 14px;">
+          <mat-icon style="color: #ed6c02;">
+            warning_amber
+          </mat-icon>
+          <span>
+            {{ imageValidationError }}
+          </span>
+        </div>
+      }
+      @if (selectedProduct(); as product) {
+        <div class="d-flex flex-column flex-lg-row gap-4 align-items-stretch" style="margin-top: 10px;">
+          <div class="d-flex flex-column gap-2" style="flex: 1 1 auto; min-width: 0;">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Producto
+              </mat-label>
+              <mat-icon matPrefix style="color: #8b6a55;">
+                cookie
+              </mat-icon>
+              <input matInput [value]="product.product_name" disabled />
+            </mat-form-field>
+            <div class="d-flex flex-column flex-md-row gap-3">
+              <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+                <mat-label>
+                  Referencia
+                </mat-label>
+                <mat-icon matPrefix style="color: #8b6a55;">
+                  tag
+                </mat-icon>
+                <input matInput [value]="product.reference" disabled />
+              </mat-form-field>
+              <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+                <mat-label>
+                  Plan
+                </mat-label>
+                <mat-icon matPrefix style="color: #8b6a55;">
+                  assignment
+                </mat-icon>
+                <input matInput [value]="product.plan_id || '—'" disabled />
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Unidad de medida
+              </mat-label>
+              <mat-icon matPrefix style="color: #8b6a55;">
+                straighten
+              </mat-icon>
+              <input matInput [value]="product.unit_of_measure" disabled />
+            </mat-form-field>
+          </div>
+          <div class="d-flex flex-column align-items-center justify-content-center" style="width: 240px; min-width: 240px;">
+            <span class="mb-2" style="color: #6b4a3a; font-size: 14px; font-weight: 500;">
+              Imagen del producto
+            </span>
+            <div class="d-flex align-items-center justify-content-center w-100" style="height: 220px; border: 1px solid #e0cdbb; border-radius: 18px; background-color: #fffaf5; overflow: hidden; padding: 14px;">
+              @if (currentProductImage) {
+                <img [src]="currentProductImage" [alt]="product.product_name" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;" />
+              } @else {
+                <div class="d-flex flex-column align-items-center justify-content-center gap-2" style="color: #8b6a55;">
+                  <mat-icon style="font-size: 72px; width: 72px; height: 72px; line-height: 72px;">
+                    brunch_dining_24
+                  </mat-icon>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="mt-4" style="border: 1px solid #e0cdbb; border-radius: 16px; background-color: #fffaf5; padding: 18px;">
+          <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+            <input #productImageInput type="file" accept="image/*" hidden (change)="onImageSelected($event)" />
+            <button mat-stroked-button type="button" [disabled]="updatingImage()" (click)="productImageInput.click()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 44px; padding: 0 16px; font-weight: 500; flex-shrink: 0;">
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                  upload
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Seleccionar imagen
+                </span>
+              </span>
+            </button>
+            <span style="color: #6b4a3a; font-size: 14px; word-break: break-word;">
+              {{ selectedImageFile()?.name || 'No se ha seleccionado ninguna imagen.' }}
+            </span>
+          </div>
+        </div>
+      }
+    </mat-dialog-content>
+    <mat-dialog-actions class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-4 pb-3 pt-2">
+      <div>
+        @if (selectedProduct()?.imageUrl || selectedProduct()?.image_path) {
+          <button mat-stroked-button type="button" (click)="deleteProductImage()" [disabled]="updatingImage() || deletingImage()" style="border-color: #c62828; color: #c62828; border-radius: 10px; min-height: 44px; padding: 0 18px; font-weight: 500;">
+            @if (deletingImage()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Eliminando...
+                </span>
+              </span>
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                  delete_outline
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Eliminar imagen
+                </span>
+              </span>
+            }
+          </button>
+        }
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button mat-stroked-button type="button" (click)="closeUpdateProductModal()" [disabled]="updatingImage() || deletingImage()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; min-height: 44px; padding: 0 18px; font-weight: 500;">
+          <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+            <mat-icon style="display: flex; align-items: center; justify-content: center; margin: 0;">
+              close
+            </mat-icon>
+            <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+              Cancelar
+            </span>
+          </span>
+        </button>
+        <button mat-flat-button type="button" (click)="updateProductImage()" [disabled]="updatingImage() || deletingImage()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; min-height: 44px; min-width: 140px; padding: 0 18px; font-weight: 600;">
+          @if (updatingImage()) {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                Actualizando...
+              </span>
+            </span>
+          } @else {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 44px; line-height: normal;">
+              <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                save
+              </mat-icon>
+              <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                Actualizar
+              </span>
+            </span>
+          }
+        </button>
+      </div>
+    </mat-dialog-actions>
+  </div>
+</ng-template>

@@ -1,0 +1,360 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        assignment
+      </mat-icon>
+      <div>
+        <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+          Inventario
+        </h2>
+        <div style="color: #8b6a55; font-size: 13px; margin-top: 2px;">
+          Realiza el conteo físico de productos por bodega, inventario y sección
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+    <div class="d-flex flex-column flex-lg-row align-items-stretch gap-3">
+      <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+        <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-weight: 600; font-size: 14px;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+            store
+          </mat-icon>
+          <span>
+            1. Bodega / Punto de venta
+          </span>
+        </div>
+        @if (loadingSolutionCenters()) {
+          <div class="d-flex align-items-center justify-content-center" style="height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+            <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+          </div>
+        } @else {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100" style="min-width: 0;">
+            <mat-icon matPrefix style="color: #8b6a55;">
+              store
+            </mat-icon>
+            <mat-select [formControl]="solutionCenterControl" placeholder="Seleccione una bodega o punto de venta" (selectionChange)="onSolutionCenterSelected($event.value)">
+              @for (solutionCenter of solutionCenters(); track solutionCenter.solutionCenterId) {
+                <mat-option [value]="solutionCenter.solutionCenterId">
+                  {{ solutionCenter.solutionCenterCode }} - {{ solutionCenter.solutionCenterName }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+      </div>
+      <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+        <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-weight: 600; font-size: 14px;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+            inventory_2
+          </mat-icon>
+          <span>
+            2. Inventario
+          </span>
+        </div>
+        @if (loadingInventories()) {
+          <div class="d-flex align-items-center justify-content-center" style=" height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+            <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+          </div>
+        } @else {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100" style="min-width: 0;">
+            <mat-icon matPrefix style="color: #8b6a55;">
+              inventory_2
+            </mat-icon>
+            <mat-select [formControl]="inventoryControl" placeholder="Seleccione un inventario" (selectionChange)="onInventorySelected($event.value)">
+              @for (inventory of inventories(); track inventory.inventoryConfigurationId) {
+                <mat-option [value]="inventory.inventoryConfigurationId">
+                  {{ inventory.inventoryConfigurationName }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+      </div>
+      <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+        <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-weight: 600; font-size: 14px;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+            shelves
+          </mat-icon>
+          <span>
+            3. Sección
+          </span>
+        </div>
+        @if (loadingSections()) {
+          <div class="d-flex align-items-center justify-content-center" style="height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+            <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+          </div>
+        } @else {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100" style="min-width: 0;">
+            <mat-icon matPrefix style="color: #8b6a55;">
+              shelves
+            </mat-icon>
+            <mat-select [formControl]="sectionControl" placeholder="Seleccione una sección" (selectionChange)="onSectionSelected($event.value)">
+              @for (section of sections(); track section.sectionId) {
+                <mat-option [value]="section.sectionId">
+                  {{ section.sectionName }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+      </div>
+    </div>
+  </div>
+  @if (sectionControl.value) {
+    @if (loadingProducts()) {
+      <div class="d-flex align-items-center justify-content-center py-5">
+        <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+      </div>
+    } @else {
+      <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+        <div class="d-flex flex-column flex-sm-row gap-2">
+          <div class="d-flex align-items-center gap-3" style="border: 1px solid #e0cdbb; border-radius: 12px; background-color: #fffdf8; min-height: 58px; padding: 8px 16px;">
+            <div class="d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 50%; background-color: #e8f5e9; flex-shrink: 0;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background-color: #2e7d32;"></span>
+            </div>
+            <div>
+              <div style="color: #4b2e1f; font-weight: 600; font-size: 14px;">
+                Estado: Activo
+              </div>
+              <small style="color: #8b6a55;">
+                Inventario habilitado
+              </small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3" style="border: 1px solid #e0cdbb; border-radius: 12px; background-color: #fffdf8; min-height: 58px; padding: 8px 16px;">
+            <mat-icon style="color: #8b6a55;">
+              inventory_2
+            </mat-icon>
+            <div>
+              <div style="color: #4b2e1f; font-weight: 600; font-size: 14px;">
+                Productos: {{ products().length }}
+              </div>
+              <small style="color: #8b6a55;">
+                En esta sección
+              </small>
+            </div>
+          </div>
+        </div>
+        <button mat-flat-button type="button" (click)="finishSection()" [disabled]="products().length === 0 || savingInventory() || loadingCounts() || !hasPendingCount" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
+          @if (savingInventory()) {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px;">
+              <span class="spinner-border spinner-border-sm" role="status"></span>
+              <span>
+                Guardando...
+              </span>
+            </span>
+          } @else {
+            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+              <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; margin: 0;">
+                done_all
+              </mat-icon>
+              <span class="d-flex align-items-center" style="height: 20px;">
+                Finalizar sección
+              </span>
+            </span>
+          }
+        </button>
+      </div>
+      <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 18px; background-color: #fffdf8;">
+        <div class="d-flex align-items-center gap-2 px-3 py-3" style="background-color: #f7e8d8; border-bottom: 1px solid #e0cdbb;">
+          <mat-icon style="color: #4b2e1f;">
+            inventory
+          </mat-icon>
+          <strong style="color: #4b2e1f; font-size: 16px;">
+            Productos de la sección
+          </strong>
+        </div>
+        @if (products().length === 0) {
+          <div class="d-flex flex-column align-items-center justify-content-center text-center py-5" style="color: #8b6a55;">
+            <mat-icon style="font-size: 42px; width: 42px; height: 42px; margin-bottom: 8px;">
+              inventory_2
+            </mat-icon>
+            <span>
+              Esta sección no tiene productos configurados.
+            </span>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-100" style="border-collapse: collapse; min-width: 1080px; background-color: #fffdf8;">
+              <thead>
+                <tr style="color: #4b2e1f; border-bottom: 1px solid #e0cdbb;">
+                  <th class="px-3 py-3 text-start" style="width: 75px;">
+                    Imagen
+                  </th>
+                  <th class="px-3 py-3 text-start">
+                    Código
+                  </th>
+                  <th class="px-3 py-3 text-start">
+                    Producto
+                  </th>
+                  <th class="px-3 py-3 text-start">
+                    Unidad de medida
+                  </th>
+                  <th class="px-3 py-3 text-center">
+                    Plan
+                  </th>
+                  @for (countNumber of countNumbers; track countNumber) {
+                    <th class="px-3 py-3 text-center" [style.min-width.px]="selectedSolutionCenter() ?.solutionCenterTypeId === 1 ? 145 : 230">
+                      <div class="d-flex flex-column align-items-center justify-content-center gap-1">
+                        <span>
+                          Conteo {{ countNumber }}
+                        </span>
+                        @if (isCountSaved(countNumber)) {
+                          <span class="d-inline-flex align-items-center justify-content-center gap-1 rounded-pill px-2" style="background-color: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 600; min-height: 22px;">
+                            <mat-icon style="font-size: 14px; width: 14px; height: 14px;">
+                              check_circle
+                            </mat-icon>
+                            Guardado
+                          </span>
+                        } @else if (isActiveCount(countNumber)) {
+                          <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-2" style="background-color: #fff3e0; color: #8a5a00; font-size: 11px; font-weight: 600; min-height: 22px;">
+                            En progreso
+                          </span>
+                        } @else {
+                          <span style="color: #9e8b80; font-size: 11px; min-height: 22px;">
+                            Pendiente
+                          </span>
+                        }
+                      </div>
+                    </th>
+                  }
+                  <th class="px-3 py-3 text-center" style="min-width: 100px;">
+                    Factor
+                  </th>
+                  <th class="px-3 py-3 text-center" style="min-width: 120px;">
+                    Existencias Siesa
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of products(); track product.productId) {
+                  <tr style="border-bottom: 1px solid #ebe6e2;">
+                    <td class="px-3 py-2">
+                      @if (product.imageUrl) {
+                        <img [src]="product.imageUrl" [alt]="product.productName" style="display: block; width: 42px; height: 42px; object-fit: contain; border-radius: 8px;" />
+                      } @else {
+                        <div class="d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; border-radius: 8px; background-color: #f7e8d8;">
+                          <mat-icon style="color: #8b6a55; font-size: 25px; width: 25px; height: 25px;">
+                            brunch_dining
+                          </mat-icon>
+                        </div>
+                      }
+                    </td>
+                    <td class="px-3 py-2" style="color: #4b2e1f; white-space: nowrap;">
+                      {{ product.reference }}
+                    </td>
+                    <td class="px-3 py-2" style="color: #4b2e1f; min-width: 180px;">
+                      <strong>
+                        {{ product.productName }}
+                      </strong>
+                    </td>
+                    <td class="px-3 py-2" style="color: #4b2e1f; min-width: 170px;">
+                      {{ product.unitOfMeasure }}
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      <span class="d-inline-flex align-items-center justify-content-center rounded-pill" [style.background-color]="getPlanBackground(product.planId)" [style.color]="getPlanColor(product.planId)" style="min-width: 62px; padding: 6px 12px; font-size: 13px; font-weight: 700;">
+                        {{ product.planId || '—' }}
+                      </span>
+                    </td>
+                    @for (countNumber of countNumbers; track countNumber) {
+                      <td class="px-3 py-2 text-center" style="vertical-align: middle;">
+                        @if (isCountSaved(countNumber) && !canViewFullDetail()) {
+                          <div class="d-inline-flex align-items-center justify-content-center gap-2" style="min-width: 110px; height: 42px; border: 1px solid #ded8d2; border-radius: 8px; background-color: #f5f0eb; color: #8b6a55; font-weight: 600;">
+                            <mat-icon style="font-size: 17px; width: 17px; height: 17px;">
+                              lock
+                            </mat-icon>
+                            <span>
+                              Guardado
+                            </span>
+                          </div>
+                        } @else if (getSavedCount(product.productId, countNumber); as savedCount) {
+                          @if (selectedSolutionCenter() ?.solutionCenterTypeId === 1) {
+                            <div class="d-inline-flex align-items-center justify-content-center gap-2" style="min-width: 110px; height: 42px; padding: 0 12px; border: 1px solid #c8e6c9; border-radius: 8px; background-color: #f1f8f2; color: #2e7d32; font-weight: 700;">
+                              <mat-icon style="font-size: 17px; width: 17px; height: 17px;">
+                                lock
+                              </mat-icon>
+                              {{ savedCount.value ?? 0 }}
+                            </div>
+                          } @else {
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                              <div style="min-width: 90px; padding: 5px 8px; border: 1px solid #c8e6c9; border-radius: 8px; background-color: #f1f8f2;">
+                                <small style="display: block; color: #6b4a3a; font-size: 10px;">
+                                  Abierto
+                                </small>
+                                <strong style="color: #2e7d32;">
+                                  {{ savedCount.open ?? 0 }}
+                                </strong>
+                              </div>
+                              <div style="min-width: 90px; padding: 5px 8px; border: 1px solid #c8e6c9; border-radius: 8px; background-color: #f1f8f2;">
+                                <small style="display: block; color: #6b4a3a; font-size: 10px;">
+                                  Cerrado
+                                </small>
+                                <strong style="color: #2e7d32;">
+                                  {{ savedCount.closed ?? 0 }}
+                                </strong>
+                              </div>
+                            </div>
+                          }
+                        }
+                        @else if (isActiveCount(countNumber)) {
+                          @if (selectedSolutionCenter() ?.solutionCenterTypeId === 1) {
+                            <input type="number" min="0" step="any" [value]="getProductDraft(product.productId).countValue ?? ''" (input)="onCountInput(product, $event)" style="width: 110px; height: 42px; border: 1px solid #d9ad77; border-radius: 8px; padding: 0 12px; color: #4b2e1f; background-color: #fffaf3; outline: none;" />
+                          } @else {
+                            <div class="d-flex align-items-end justify-content-center gap-2">
+                              <div>
+                                <small style="display: block; color: #8b6a55; margin-bottom: 3px;">
+                                  Abierto
+                                </small>
+                                <input type="number" min="0" step="any" [value]="getProductDraft(product.productId).open ?? ''" (input)="onOpenInput(product, $event)" style="width: 90px; height: 42px; border: 1px solid #d9ad77; border-radius: 8px; padding: 0 10px; color: #4b2e1f; background-color: #fffaf3; outline: none;" />
+                              </div>
+                              <div>
+                                <small style="display: block; color: #8b6a55; margin-bottom: 3px;">
+                                  Cerrado
+                                </small>
+                                <input type="number" min="0" step="any" [value]="getProductDraft(product.productId).closed ?? ''" (input)="onClosedInput(product, $event)" style="width: 90px; height: 42px; border: 1px solid #d9ad77; border-radius: 8px; padding: 0 10px; color: #4b2e1f; background-color: #fffaf3; outline: none;" />
+                              </div>
+                            </div>
+                          }
+                        }
+                        @else {
+                          <span style="color: #b7aaa2; font-size: 18px;">
+                            —
+                          </span>
+                        }
+                      </td>
+                    }
+                    <td class="px-3 py-2 text-center" style="color: #4b2e1f; font-weight: 600;">
+                      @if (getCalculatedFactor(product) !== null) {
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 90px; background-color: #f7e8d8; color: #4b2e1f; font-size: 13px; font-weight: 700; white-space: nowrap;">
+                          {{ getCalculatedFactor(product) }}
+                        </span>
+                      } @else {
+                        <span style="color: #b7aaa2; font-size: 18px;">
+                          —
+                        </span>
+                      }
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      @if (product.siesaStockStatus === 'FOUND') {
+                        <span
+                          class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 95px; background-color: #e8f5e9; color: #2e7d32; font-size: 13px; font-weight: 700; white-space: nowrap;">
+                          {{ product.existencia1 ?? '—' }} - {{ product.unidadInventario || '—' }}
+                        </span>
+                      } @else {
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 65px; background-color: #f5f0eb; color: #8b6a55; font-size: 13px; font-weight: 600;">
+                          —
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,388 @@
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        edit
+      </mat-icon>
+      <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+        Actualizar bodega
+      </h2>
+    </div>
+    <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 40px; padding: 0 16px; font-weight: 500;">
+      <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 40px; line-height: normal;">
+        <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+          close
+        </mat-icon>
+        <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+          Cancelar
+        </span>
+      </span>
+    </button>
+  </div>
+  @if (loading()) {
+    <div class="d-flex justify-content-center align-items-center py-5">
+      <mat-spinner diameter="42" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+    </div>
+  } @else if (solutionCenterDetail(); as detail) {
+    <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+      <h3 class="mb-4" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+        Información de la bodega
+      </h3>
+      @if (validationError) {
+        <div class="d-flex align-items-center gap-3 mb-4" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+          <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+            warning_amber
+          </mat-icon>
+          <span>
+            {{ validationError }}
+          </span>
+        </div>
+      }
+      <form [formGroup]="solutionCenterForm" (ngSubmit)="updateSolutionCenter()">
+        <div class="row g-3 align-items-center">
+          <div class="col-12 col-lg-3">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Tipo
+              </mat-label>
+              <mat-select formControlName="solutionCenterTypeId">
+                @for (type of solutionCenterTypes(); track type.solution_center_type_id) {
+                  <mat-option [value]="type.solution_center_type_id">
+                    {{ type.solution_center_type_name }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="col-12 col-lg-2">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Código
+              </mat-label>
+              <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+                tag
+              </mat-icon>
+              <input matInput formControlName="solutionCenterCode" autocomplete="off" (input)="onCodeInput($event)" style="text-transform: uppercase;" />
+            </mat-form-field>
+          </div>
+          <div class="col-12 col-lg-3">
+            <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+              <mat-label>
+                Nombre
+              </mat-label>
+              <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+                warehouse
+              </mat-icon>
+              <input matInput formControlName="solutionCenterName" autocomplete="off" (input)="onNameInput($event)" style="text-transform: uppercase;" />
+            </mat-form-field>
+          </div>
+          <div class="col-12 col-lg-2">
+            <div class="d-flex align-items-center" style="height: 56px;">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1"
+                [style.background-color]="
+                  detail.isActive
+                    ? '#e8f5e9'
+                    : '#ffebee'
+                "
+                [style.color]="
+                  detail.isActive
+                    ? '#2e7d32'
+                    : '#c62828'
+                "
+                style="
+                  min-width: 82px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  line-height: 1;
+                "
+              >
+                {{ detail.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+          </div>
+          <div class="col-12 col-lg-2">
+            <button mat-flat-button type="submit" [disabled]="saving()" class="w-100" style="background-color: #4b2e1f; color: #ffffff; border-radius: 12px; height: 56px; padding: 0 20px; font-weight: 600;">
+              @if (saving()) {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px;">
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                  <span>
+                    Actualizando...
+                  </span>
+                </span>
+              } @else {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px;">
+                  <mat-icon>
+                    save
+                  </mat-icon>
+                  <span>
+                    Actualizar
+                  </span>
+                </span>
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div class="d-flex align-items-center gap-2">
+          <mat-icon style="color: #4b2e1f;">
+            shelves
+          </mat-icon>
+          <h3 class="m-0" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+            Secciones configuradas
+          </h3>
+          <span style="color: #8b6a55; font-size: 14px;">
+            ({{ detail.sections.length }})
+          </span>
+        </div>
+      </div>
+      <div class="row g-3 align-items-center mb-4" style="border: 1px solid #ebe1d8; border-radius: 16px; background-color: #fffaf5; padding: 16px 8px;">
+        <div class="col-12 col-lg-9">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+            <mat-label>
+              Agregar sección
+            </mat-label>
+            <mat-icon matPrefix style="color: #8b6a55; font-size: 24px; width: 24px; height: 24px;">
+              shelves
+            </mat-icon>
+            <mat-select [formControl]="sectionToAssignControl" [disabled]="loadingAvailableSections() || assigningSection()">
+              <mat-option [value]="0">
+                Seleccione una sección
+              </mat-option>
+              @for (section of availableSections(); track section.sectionId) {
+                <mat-option [value]="section.sectionId">
+                  {{ section.sectionName }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-12 col-lg-3">
+          <button mat-stroked-button type="button" class="w-100" [disabled]="assigningSection() || loadingAvailableSections() || sectionToAssignControl.value <= 0" (click)="assignSection()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 12px; height: 56px; padding: 0 18px; font-weight: 500;">
+            @if (assigningSection()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>
+                  Agregando...
+                </span>
+              </span>
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">
+                  add
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Agregar sección
+                </span>
+              </span>
+            }
+          </button>
+        </div>
+      </div>
+      @if (detail.sections.length === 0) {
+        <div class="d-flex flex-column align-items-center justify-content-center text-center py-5" style="color: #8b6a55; border: 1px solid #ebe1d8; border-radius: 16px;">
+          <mat-icon style="font-size: 38px; width: 38px; height: 38px; margin-bottom: 8px;">
+            shelves
+          </mat-icon>
+          <span>
+            Esta bodega no tiene secciones configuradas.
+          </span>
+        </div>
+      } @else {
+        <mat-accordion multi class="d-flex flex-column">
+          @for (section of detail.sections; track section.sectionId) {
+            <mat-expansion-panel style="box-shadow: none; border: 1px solid #e0cdbb; border-radius: 14px; background-color: #fffdf8; margin-bottom: 12px; overflow: hidden;">
+              <mat-expansion-panel-header style="min-height: 58px; height: auto; padding: 6px 12px;">
+                <mat-panel-title style="width: 100%; min-width: 0; margin-right: 8px;">
+                  <div class="d-flex align-items-center justify-content-between gap-2 w-100" style="min-width: 0;">
+                    <div class="d-flex align-items-center gap-2" style="min-width: 0; flex: 1 1 auto;">
+                      <mat-icon style="color: #8b6a55; width: 22px; height: 22px; font-size: 22px; flex-shrink: 0;">
+                        shelves
+                      </mat-icon>
+                      <div style="min-width: 0; flex: 1 1 auto;">
+                        <div style="color: #4b2e1f; font-size: 15px; font-weight: 600; line-height: 18px; overflow: hidden; text-overflow: ellipsis;">
+                          {{ section.sectionName }}
+                        </div>
+                        <div class="d-lg-none" style="color: #8b6a55; font-size: 11px; line-height: 15px; white-space: nowrap;">
+                          {{ section.products.length }} producto(s)
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-none d-lg-flex align-items-center gap-2" style="flex-shrink: 0;">
+                      <span style="color: #8b6a55; font-size: 13px; white-space: nowrap;">
+                        {{ section.products.length }} producto(s)
+                      </span>
+                      <mat-slide-toggle [checked]="section.assignmentIsActive" [disabled]="updatingSectionStatusId() === section.sectionId || removingSectionId() !== null" (click)="$event.stopPropagation()" (change)="updateSectionAssignmentStatus(section, $event.checked)" style="--mat-sys-primary: #4b2e1f; flex-shrink: 0;">
+                        {{ section.assignmentIsActive ? 'Activa' : 'Inactiva' }}
+                      </mat-slide-toggle>
+                      <button mat-icon-button type="button" matTooltip="Retirar sección" matTooltipPosition="above" [disabled]="removingSectionId() !== null" (click)="$event.stopPropagation(); removeSection(section)" style="width: 38px; height: 38px; color: #c62828; flex-shrink: 0;">
+                        @if (removingSectionId() === section.sectionId) {
+                          <span class="spinner-border spinner-border-sm" role="status"></span>
+                        } @else {
+                          <mat-icon>
+                            delete_outline
+                          </mat-icon>
+                        }
+                      </button>
+                    </div>
+                    <div class="d-flex d-lg-none align-items-center gap-1" style="flex-shrink: 0;">
+                      <mat-slide-toggle
+                        [checked]="section.assignmentIsActive"
+                        [disabled]="updatingSectionStatusId() === section.sectionId"
+                        (click)="$event.stopPropagation()"
+                        (change)="updateSectionAssignmentStatus(section, $event.checked)"
+                        matTooltip="{{ section.assignmentIsActive ? 'Sección activa' : 'Sección inactiva' }}"
+                        matTooltipPosition="above"
+                        style="--mat-sys-primary: #4b2e1f; flex-shrink: 0;"
+                      >
+                      </mat-slide-toggle>
+                      <button mat-icon-button type="button" matTooltip="Retirar sección" matTooltipPosition="above" [disabled]="removingSectionId() !== null" (click)="$event.stopPropagation(); removeSection(section)" style="width: 36px; height: 36px; color: #c62828; flex-shrink: 0;">
+                        @if (removingSectionId() === section.sectionId) {
+                          <span class="spinner-border spinner-border-sm" role="status"></span>
+                        } @else {
+                          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">
+                            delete_outline
+                          </mat-icon>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 mx-2 mt-2 mb-3">
+                <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100" style="min-width: 0; flex: 1 1 auto;">
+                  <mat-label>
+                    Buscar producto
+                  </mat-label>
+                  <mat-icon matPrefix style="color: #8b6a55; font-size: 22px; width: 22px; height: 22px;">
+                    search
+                  </mat-icon>
+                  <input matInput autocomplete="off" [formControl]="getProductSearchControl(section.sectionId)" [matAutocomplete]="productAutocomplete" />
+                  @if (searchingProductSectionId() === section.sectionId) {
+                    <mat-spinner matSuffix diameter="20" style="--mat-sys-primary: #4b2e1f; margin-right: 6px;"></mat-spinner>
+                  }
+                  <mat-autocomplete #productAutocomplete="matAutocomplete" [displayWith]="displayProduct">
+                    @for (productResult of getProductResults(section.sectionId); track productResult.productId) {
+                      <mat-option [value]="productResult">
+                        <div class="d-flex flex-column justify-content-center" style="width: 100%;">
+                          <span style="color: #4b2e1f; font-weight: 500; line-height: 20px;">
+                            {{ productResult.productName }}
+                          </span>
+                          <small style="color: #8b6a55; line-height: 18px;">
+                            {{ productResult.reference }} · {{ productResult.unitOfMeasure }}
+                          </small>
+                        </div>
+                      </mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+                <button mat-stroked-button type="button" [disabled]="addingProductSectionId() !== null" (click)="addProduct(section)" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 12px; height: 56px; min-width: 150px; padding: 0 18px; font-weight: 500; flex-shrink: 0;">
+                  @if (addingProductSectionId() === section.sectionId) {
+                    <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                      <span>
+                        Agregando...
+                      </span>
+                    </span>
+                  } @else {
+                    <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 56px; line-height: normal;">
+                      <mat-icon style="display: flex; align-items: center; justify-content: center; font-size: 20px; width: 20px; height: 20px; line-height: 20px; margin: 0;">                        add
+                      </mat-icon>
+                      <span>
+                        Agregar
+                      </span>
+                    </span>
+                  }
+                </button>
+              </div>
+              @if (section.products.length === 0) {
+                <div class="text-center py-3" style="color: #8b6a55; font-size: 14px;">
+                  Esta sección no tiene productos.
+                </div>
+              } @else {
+                <div cdkDropList [cdkDropListData]="section.products" [cdkDropListDisabled]="updatingProductOrderId() !== null" (cdkDropListDropped)="dropProduct(section, $event)" class="d-flex flex-column gap-2 px-2 pt-2 pb-3">
+                  @for (product of section.products; track product.solutionCenterProductId) {
+                    <div cdkDrag [cdkDragData]="product" class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-3" style="border: 1px solid #ebe1d8; border-radius: 12px; background-color: #fffaf5; padding: 8px 10px; min-width: 0;">
+                      <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto; min-width: 0;">
+                        <mat-icon cdkDragHandle matTooltip="Mover producto" matTooltipPosition="above" style="color: #8b6a55; width: 22px; height: 22px; font-size: 22px; line-height: 22px; cursor: grab; flex-shrink: 0;">
+                          drag_indicator
+                        </mat-icon>
+                        <div class="d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; background-color: #f7e8d8; color: #4b2e1f; font-size: 14px; font-weight: 700; flex-shrink: 0;">
+                          {{ product.sortOrder }}
+                        </div>
+                        <div class="d-lg-none" style="min-width: 0; flex: 1 1 auto;">
+                          <small style="display: block; color: #8b6a55; font-size: 11px; line-height: 14px;">
+                            Producto
+                          </small>
+                          <span style="display: block; color: #4b2e1f; font-size: 14px; font-weight: 500; line-height: 18px; word-break: break-word;">
+                            {{ product.productName }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="d-flex d-lg-none flex-wrap gap-3" style="padding-left: 54px; min-width: 0;">
+                        <div style="flex: 1 1 80px; min-width: 0;">
+                          <small style="display: block; color: #8b6a55; font-size: 11px; line-height: 14px;">
+                            Referencia
+                          </small>
+                          <span style="display: block; color: #4b2e1f; font-size: 13px; font-weight: 500; line-height: 17px;">
+                            {{ product.reference }}
+                          </span>
+                        </div>
+                        <div style="flex: 1 1 100px; min-width: 0;">
+                          <small
+                            style="display: block; color: #8b6a55; font-size: 11px; line-height: 14px;">
+                            Unidad de medida
+                          </small>
+                          <span style="display: block; color: #4b2e1f; font-size: 13px; line-height: 17px; word-break: break-word;">
+                            {{ product.unitOfMeasure }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="d-none d-lg-block" style="flex: 0 0 180px; min-width: 0;">
+                        <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 15px;">
+                          Referencia
+                        </small>
+                        <span style="color: #4b2e1f; font-size: 14px; font-weight: 500; line-height: 18px;">
+                          {{ product.reference }}
+                        </span>
+                      </div>
+                      <div class="d-none d-lg-block" style="flex: 1 1 auto; min-width: 0;">
+                        <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 15px;">
+                          Producto
+                        </small>
+                        <span style="display: block; color: #4b2e1f; font-size: 14px; font-weight: 500; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                          {{ product.productName }}
+                        </span>
+                      </div>
+                      <div class="d-none d-lg-block" style="flex: 0 0 250px; min-width: 0;">
+                        <small style="display: block; color: #8b6a55; font-size: 12px; line-height: 15px;">
+                          Unidad de medida
+                        </small>
+                        <span style="display: block; color: #4b2e1f; font-size: 14px; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                          {{ product.unitOfMeasure }}
+                        </span>
+                      </div>
+                      <div class="d-flex align-items-center justify-content-end" style="flex: 0 0 auto;">
+                        <button mat-icon-button type="button" matTooltip="Eliminar producto" matTooltipPosition="above" [disabled]="removingProductId() !== null || updatingProductOrderId() !== null" (click)="removeProduct(section, product)" style="width: 38px; height: 38px; color: #c62828; flex-shrink: 0;">
+                          @if (removingProductId() === product.solutionCenterProductId) {
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                          } @else {
+                            <mat-icon>
+                              delete_outline
+                            </mat-icon>
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+    </div>
+  }
+</div>

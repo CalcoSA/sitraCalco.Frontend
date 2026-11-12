@@ -1,0 +1,10 @@
+<div class="vh-100 w-100 d-grid overflow-hidden" style=" background-color: #fffdf8; transition: grid-template-columns 0.25s ease;" [style.grid-template-columns]="sidebarOpen ? '260px 1fr' : '82px 1fr'">
+  <app-sidebar [sidebarOpen]="sidebarOpen" (toggleSidebar)="toggleSidebar()" />
+  <div class="vh-100 d-grid overflow-hidden" style=" grid-template-rows: 86px minmax(0, 1fr) 95px; min-width: 0;">
+    <app-header />
+    <main class="p-4 overflow-auto" style=" background-color: #fffdf8; min-height: 0;">
+      <router-outlet />
+    </main>
+    <app-footer />
+  </div>
+</div>
