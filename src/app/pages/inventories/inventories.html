@@ -8,10 +8,15 @@
         <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
           Inventario
         </h2>
-        <div style="color: #8b6a55; font-size: 13px; margin-top: 2px;">
-          Realiza el conteo físico de productos por bodega, inventario y sección
-        </div>
       </div>
+    </div>
+    <div class="d-inline-flex align-items-center gap-1 mt-1" [style.color]="isOnline() ? '#2e7d32' : '#ed6c02'" style="font-size: 12px; font-weight: 600;">
+      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">
+        {{ isOnline() ? 'wifi' : 'wifi_off' }}
+      </mat-icon>
+      <span>
+        {{ isOnline() ? 'Con conexión' : 'Modo offline' }}
+      </span>
     </div>
   </div>
   <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
@@ -137,25 +142,46 @@
             </div>
           </div>
         </div>
-        <button mat-flat-button type="button" (click)="finishSection()" [disabled]="products().length === 0 || savingInventory() || loadingCounts() || !hasPendingCount" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
-          @if (savingInventory()) {
-            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px;">
-              <span class="spinner-border spinner-border-sm" role="status"></span>
-              <span>
-                Guardando...
+        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
+          <button mat-stroked-button type="button" (click)="prepareForOffline()" [disabled]="preparingOffline() || loadingCounts() || products().length === 0 || !isOnline()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
+            @if (preparingOffline()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 48px;">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>
+                  Preparando...
+                </span>
               </span>
-            </span>
-          } @else {
-            <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
-              <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; margin: 0;">
-                done_all
-              </mat-icon>
-              <span class="d-flex align-items-center" style="height: 20px;">
-                Finalizar sección
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="height: 48px;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; margin: 0;">
+                  {{ offlinePrepared() ? 'offline_pin' : 'download_for_offline' }}
+                </mat-icon>
+                <span>
+                  {{ offlinePrepared() ? 'Actualizar offline' : 'Preparar offline' }}
+                </span>
               </span>
-            </span>
-          }
-        </button>
+            }
+          </button>
+          <button mat-flat-button type="button" (click)="finishSection()" [disabled]="products().length === 0 || savingInventory() || loadingCounts() || !hasPendingCount" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
+            @if (savingInventory()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px;">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>
+                  Guardando...
+                </span>
+              </span>
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; margin: 0;">
+                  done_all
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px;">
+                  Finalizar sección
+                </span>
+              </span>
+            }
+          </button>
+        </div>
       </div>
       <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 18px; background-color: #fffdf8;">
         <div class="d-flex align-items-center gap-2 px-3 py-3" style="background-color: #f7e8d8; border-bottom: 1px solid #e0cdbb;">
@@ -207,6 +233,13 @@
                               check_circle
                             </mat-icon>
                             Guardado
+                          </span>
+                        } @else if (isCountPending(countNumber)) {
+                          <span class="d-inline-flex align-items-center justify-content-center gap-1 rounded-pill px-2" style="background-color: #fff3e0; color: #ed6c02; font-size: 11px; font-weight: 600; min-height: 22px; white-space: nowrap;">
+                            <mat-icon style="font-size: 14px; width: 14px; height: 14px;">
+                              cloud_upload
+                            </mat-icon>
+                            Por sincronizar
                           </span>
                         } @else if (isActiveCount(countNumber)) {
                           <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-2" style="background-color: #fff3e0; color: #8a5a00; font-size: 11px; font-weight: 600; min-height: 22px;">
