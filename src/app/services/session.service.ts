@@ -1,14 +1,17 @@
+import { NetworkStatusService } from './network-status.service';
 import { environment } from '../../environments/environment';
 import { LoginResult } from '../models/login-result.model';
 import { MenuOption } from '../models/menu-option.model';
 import { AuthUser } from '../models/auth-user.model';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
 
 export class SessionService {
+
+  private readonly networkStatusService = inject(NetworkStatusService);
 
   private readonly sessionKey = 'sitraCalco.session';
   private readonly activityKey = 'sitraCalco.lastActivity';
@@ -85,6 +88,10 @@ export class SessionService {
 
     if (!session?.accessToken) {
       return false;
+    }
+
+    if (!this.networkStatusService.isOnline()) {
+      return true;
     }
 
     const expiresAt = new Date(session.expiresAt).getTime();
