@@ -1,3 +1,4 @@
+import { NetworkStatusService } from './network-status.service';
 import { Injectable, inject, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SessionService } from './session.service';
@@ -10,10 +11,11 @@ import { Router } from '@angular/router';
 
 export class InactivityService {
 
+  private readonly networkStatusService = inject(NetworkStatusService);
   private readonly authService = inject(AuthService);
   private readonly sessionService = inject(SessionService);
   private readonly router = inject(Router);
-  private readonly zone = inject(NgZone);
+  private readonly zone = inject(NgZone);  
 
   private readonly reportInterval = 30_000;
 
@@ -24,7 +26,14 @@ export class InactivityService {
   private nextAllowedReportAt = 0;
 
   private readonly onUserActivity = (): void => {
+
     if (!this.sessionService.getSession()) {
+      return;
+    }
+
+    if (!this.networkStatusService.isOnline()) {
+      this.sessionService.registerLocalActivity();
+      this.pendingActivity = true;
       return;
     }
 
@@ -73,6 +82,10 @@ export class InactivityService {
       return;
     }
 
+    if (!this.networkStatusService.isOnline()) {
+      return;
+    }
+
     if (!this.sessionService.isAuthenticated()) {
       this.closeLocalSession();
       return;
@@ -93,6 +106,11 @@ export class InactivityService {
   }
 
   private reportActivity(): void {
+
+    if (!this.networkStatusService.isOnline()) {
+      return;
+    }
+
     this.reporting = true;
     this.pendingActivity = false;
     this.lastReportAt = Date.now();
@@ -132,10 +150,12 @@ export class InactivityService {
       return;
     }
 
-    this.authService.logout().subscribe({
-      next: () => {},
-      error: () => {}
-    });
+    if (this.networkStatusService.isOnline()) {
+      this.authService.logout().subscribe({
+        next: () => {},
+        error: () => {}
+      });
+    }
 
     this.closeLocalSession();
   }
