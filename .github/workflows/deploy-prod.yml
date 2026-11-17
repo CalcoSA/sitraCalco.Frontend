@@ -141,7 +141,36 @@ jobs:
             -f docker-compose.prod.yml \
             ps --status running --services | grep -qx frontend
 
-          curl --fail --silent --show-error \
-            --retry 10 --retry-delay 2 --retry-connrefused \
-            http://127.0.0.1:8080/ > /dev/null
+          echo "Esperando que el frontend Production esté disponible..."
+
+          frontend_ready=false
+
+          for i in {1..30}; do
+            if curl --fail --silent --show-error \
+              http://127.0.0.1:8080/ > /dev/null 2>&1; then
+
+              echo "Frontend Production disponible correctamente."
+              frontend_ready=true
+              break
+            fi
+
+            echo "Intento $i/30: frontend todavía no disponible."
+            sleep 2
+          done
+
+          if [ "$frontend_ready" != "true" ]; then
+            echo "ERROR: El frontend Production no respondió correctamente."
+
+            docker compose \
+              -p sitracalco-frontend-prod \
+              -f docker-compose.prod.yml \
+              ps
+
+            docker compose \
+              -p sitracalco-frontend-prod \
+              -f docker-compose.prod.yml \
+              logs --tail=100 frontend
+
+            exit 1
+          fi
           REMOTE

@@ -1,1 +1,285 @@
-<p>inventory-reconciliation works!</p>
+<div class="d-flex flex-column gap-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2" style="min-height: 40px;">
+    <div class="d-flex align-items-center gap-2">
+      <mat-icon style="color: #4b2e1f; font-size: 30px; width: 30px; height: 30px;">
+        pivot_table_chart
+      </mat-icon>
+      <div>
+        <h2 class="m-0" style="color: #4b2e1f; font-size: 26px; font-weight: 600;">
+          Conciliación de inventarios
+        </h2>
+      </div>
+    </div>
+  </div>
+  <div style="border: 1px solid #e0cdbb; border-radius: 20px; background-color: #fffdf8; padding: 24px;">
+    <h3 class="mb-4" style="color: #4b2e1f; font-size: 18px; font-weight: 600;">
+      Consultar historial
+    </h3>
+    @if (validationError()) {
+      <div class="d-flex align-items-center gap-3 mb-4" role="alert" style="background-color: #fff3e3; color: #7a4300; border-radius: 16px; padding: 14px 18px;">
+        <mat-icon style="color: #ef7d00; flex-shrink: 0;">
+          warning_amber
+        </mat-icon>
+        <span>
+          {{ validationError() }}
+        </span>
+      </div>
+    }
+    <form [formGroup]="filterForm" (ngSubmit)="searchHistory()">
+      <div class="d-flex flex-column flex-md-row gap-3 mb-3">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Fecha desde
+          </mat-label>
+          <input matInput [matDatepicker]="fromPicker" formControlName="from" placeholder="DD/MM/AAAA" [max]="filterForm.controls.to.value" readonly (click)="fromPicker.open()" />
+          <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Fecha hasta
+          </mat-label>
+          <input matInput [matDatepicker]="toPicker" formControlName="to" placeholder="Opcional" [min]="filterForm.controls.from.value" readonly (click)="toPicker.open()" />
+          <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div class="d-flex flex-column flex-lg-row align-items-stretch gap-3">
+        <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+          <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-size: 14px; font-weight: 600;">
+            <mat-icon style="width: 18px; height: 18px; font-size: 18px;">
+              store
+            </mat-icon>
+            Centro de solución
+          </div>
+          @if (loadingSolutionCenters()) {
+            <div class="d-flex align-items-center justify-content-center" style="height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+              <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+            </div>
+          } @else {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+              <mat-icon matPrefix style="color: #8b6a55;">
+                store
+              </mat-icon>
+              <mat-select formControlName="solutionCenterId" placeholder="Seleccione un centro" (selectionChange)="onSolutionCenterSelected($event.value)">
+                @for (center of solutionCenters(); track center.solutionCenterId) {
+                  <mat-option [value]="center.solutionCenterId">
+                    {{ center.solutionCenterCode }} - {{ center.solutionCenterName }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        </div>
+        <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+          <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-size: 14px; font-weight: 600;">
+            <mat-icon style="width: 18px; height: 18px; font-size: 18px;">
+              inventory_2
+            </mat-icon>
+            Inventario
+          </div>
+          @if (loadingInventories()) {
+            <div class="d-flex align-items-center justify-content-center" style="height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+              <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+            </div>
+          } @else {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+              <mat-icon matPrefix style="color: #8b6a55;">
+                inventory_2
+              </mat-icon>
+              <mat-select formControlName="inventoryConfigurationId" placeholder="Seleccione un inventario" (selectionChange)="onInventorySelected($event.value)">
+                @for (inventory of inventories(); track inventory.inventoryConfigurationId) {
+                  <mat-option [value]="inventory.inventoryConfigurationId">
+                    {{ inventory.inventoryConfigurationName }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        </div>
+        <div class="w-100" style="min-width: 0; flex: 1 1 0;">
+          <div class="d-flex align-items-center gap-2 mb-2" style="color: #4b2e1f; font-size: 14px; font-weight: 600;">
+            <mat-icon style="width: 18px; height: 18px; font-size: 18px;">
+              shelves
+            </mat-icon>
+            Sección
+          </div>
+          @if (loadingSections()) {
+            <div class="d-flex align-items-center justify-content-center" style="height: 56px; border: 1px solid #e0cdbb; border-radius: 12px;">
+              <mat-spinner diameter="26" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+            </div>
+          } @else {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+              <mat-icon matPrefix style="color: #8b6a55;">
+                shelves
+              </mat-icon>
+              <mat-select formControlName="sectionId" placeholder="Seleccione una sección" (selectionChange)="onSectionSelected()">
+                @for (section of sections(); track section.sectionId) {
+                  <mat-option [value]="section.sectionId">
+                    {{ section.sectionName }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        </div>
+      </div>
+      <div class="d-grid d-sm-flex justify-content-sm-end align-items-sm-center gap-2 mt-4">
+        <button mat-stroked-button type="button" (click)="clearFilters()" [disabled]="loadingHistory()" style="height: 46px; border-color: #8b6a55; color: #4b2e1f; border-radius: 10px;">
+          <mat-icon>
+            cleaning_services
+          </mat-icon>
+          Limpiar
+        </button>
+        <button mat-flat-button type="submit" [disabled]="loadingHistory()" style="height: 46px; min-width: 135px; background-color: #4b2e1f; color: #ffffff; border-radius: 10px; padding: 0 20px;">
+          @if (loadingHistory()) {
+            <span class="d-flex align-items-center justify-content-center" style="height: 100%; line-height: 1;">
+              <mat-spinner diameter="22" style="--mat-sys-primary: #ffffff;"></mat-spinner>
+            </span>
+          } @else {
+            <span class="d-flex align-items-center justify-content-center gap-2" style="height: 100%; line-height: 1;">
+              <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+                search
+              </mat-icon>
+              <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                Consultar
+              </span>
+            </span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  @if (!loadingHistory() && history().length > 0) {
+    <div class="overflow-hidden" style="border: 1px solid #e0cdbb; border-radius: 18px; background-color: #fffdf8;">
+      <div class="d-flex align-items-center gap-2 px-3 py-3" style="background-color: #f7e8d8; color: #4b2e1f; border-bottom: 1px solid #e0cdbb;">
+        <mat-icon>
+          history
+        </mat-icon>
+        <strong>
+          Historial de inventario
+        </strong>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-100" style="border-collapse: collapse; min-width: max-content; background-color: #fffdf8;">
+          <thead>
+            <tr style="color: #4b2e1f; background-color: #fffdf8;">
+              <th rowspan="3" class="px-3 py-3 text-start" style="min-width: 115px; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb;">
+                Referencia
+              </th>
+              <th rowspan="3" class="px-3 py-3 text-start" style="min-width: 220px; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb;">
+                Producto
+              </th>
+              <th rowspan="3" class="px-3 py-3 text-start" style="min-width: 170px; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb;">
+                Unidad de medida
+              </th>
+              @for (day of history(); track day.inventoryExecutionId) {
+                <th [attr.colspan]="getDateColumnSpan(day)" class="px-3 py-2 text-center" style="background-color: #f7e8d8; border-right: 1px solid #d8bfa9; border-bottom: 1px solid #d8bfa9; font-size: 15px; font-weight: 700;">
+                  {{ formatHistoryDate(day.date) }}
+                </th>
+              }
+            </tr>
+            <tr style="color: #4b2e1f;">
+              @for (day of history(); track day.inventoryExecutionId) {
+                @for (countNumber of getCountNumbers(day); track countNumber) {
+                  <th [attr.colspan]="isWarehouse ? 2 : 3" class="px-3 py-2 text-center" style="background-color: #fff8ef; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb; font-weight: 700;">
+                    Conteo {{ countNumber }}
+                  </th>
+                }
+              }
+            </tr>
+            <tr style="color: #6b4a3a;">
+              @for (day of history(); track day.inventoryExecutionId) {
+                @for (countNumber of getCountNumbers(day); track countNumber) {
+                  @if (isWarehouse) {
+                    <th class="px-3 py-2 text-center" style="min-width: 120px; border-bottom: 1px solid #e0cdbb;">
+                      Valor
+                    </th>
+                  } @else {
+                    <th class="px-3 py-2 text-center" style="min-width: 100px; border-bottom: 1px solid #e0cdbb;">
+                      Abierto
+                    </th>
+                    <th class="px-3 py-2 text-center" style="min-width: 100px; border-bottom: 1px solid #e0cdbb;">
+                      Cerrado
+                    </th>
+                  }
+                  <th class="px-3 py-2 text-center" style="min-width: 145px; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb;">
+                    Factor
+                  </th>
+                }
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of tableProducts(); track product.reference) {
+              <tr style="border-bottom: 1px solid #ebe6e2;">
+                <td class="px-3 py-3" style="color: #4b2e1f; white-space: nowrap;">
+                  {{ product.reference }}
+                </td>
+                <td class="px-3 py-3" style="color: #4b2e1f;">
+                  <strong>
+                    {{ product.productName }}
+                  </strong>
+                </td>
+                <td class="px-3 py-3" style="color: #4b2e1f; white-space: nowrap; border-right: 1px solid #e0cdbb;">
+                  {{ product.unitOfMeasure }}
+                </td>
+                @for (day of history(); track day.inventoryExecutionId) {
+                  @for (countNumber of getCountNumbers(day); track countNumber) {
+                    @if (getHistoryCount(day, product.reference, countNumber); as count) {
+                      @if (isWarehouse) {
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
+                          {{ count.countValue ?? '—' }}
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                          <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 80px; background-color: #f7e8d8; font-weight: 600;">
+                            {{ count.multiplicationValue ?? '—' }}
+                          </span>
+                        </td>
+                      } @else {
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
+                          {{ count.open ?? '—' }}
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
+                          {{ count.closed ?? '—' }}
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                          <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 80px; background-color: #f7e8d8; font-weight: 600;">
+                            {{ count.multiplicationValue ?? '—' }}
+                          </span>
+                        </td>
+                      }
+                    } @else {
+                      @if (isWarehouse) {
+                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
+                          —
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #b7aaa2; border-right: 1px solid #e0cdbb;">
+                          —
+                        </td>
+                      } @else {
+                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
+                          —
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
+                          —
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #b7aaa2; border-right: 1px solid #e0cdbb;">
+                          —
+                        </td>
+                      }
+                    }
+                  }
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="px-3 py-3" style="border-top: 1px solid #ebe6e2; color: #6b4a3a; font-size: 13px;">
+        {{ tableProducts().length }} producto(s) · {{ history().length }} fecha(s)
+      </div>
+    </div>
+  }
+  @if (!loadingHistory() && history().length === 0 && filterForm.controls.sectionId.value) { }
+</div>
