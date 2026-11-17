@@ -139,7 +139,36 @@ jobs:
             -f docker-compose.qa.yml \
             ps --status running --services | grep -qx frontend
 
-          curl --fail --silent --show-error \
-            --retry 10 --retry-delay 2 --retry-connrefused \
-            http://127.0.0.1:8081/ > /dev/null
+          echo "Esperando que el frontend QA esté disponible..."
+
+          frontend_ready=false
+
+          for i in {1..30}; do
+            if curl --fail --silent --show-error \
+              http://127.0.0.1:8081/ > /dev/null 2>&1; then
+
+              echo "Frontend QA disponible correctamente."
+              frontend_ready=true
+              break
+            fi
+
+            echo "Intento $i/30: frontend todavía no disponible."
+            sleep 2
+          done
+
+          if [ "$frontend_ready" != "true" ]; then
+            echo "ERROR: El frontend QA no respondió correctamente."
+
+            docker compose \
+              -p sitracalco-frontend-qa \
+              -f docker-compose.qa.yml \
+              ps
+
+            docker compose \
+              -p sitracalco-frontend-qa \
+              -f docker-compose.qa.yml \
+              logs --tail=100 frontend
+
+            exit 1
+          fi
           REMOTE
