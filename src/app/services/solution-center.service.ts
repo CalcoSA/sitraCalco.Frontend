@@ -69,6 +69,10 @@ export class SolutionCenterService {
       );
   }
 
+  getAllCenters(): Observable<ApiResponse<SolutionCenter[]>> {
+    return this.http.get<ApiResponse<SolutionCenter[]>>(`${apiConfig.inventoryBaseUrl}/SolutionCenter/all`);
+  }
+
   getById(solutionCenterId: number): Observable<ApiResponse<SolutionCenterDetail>> {
     return this.http.get<ApiResponse<SolutionCenterDetail>>(`${apiConfig.inventoryBaseUrl}/SolutionCenter/${solutionCenterId}`);
   }

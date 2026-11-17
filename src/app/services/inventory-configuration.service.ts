@@ -110,6 +110,10 @@ export class InventoryConfigurationService {
     );
   }
 
+  getAllConfigurations(solutionCenterId: number): Observable<ApiResponse<InventoryAvailableOption[]>> {
+    return this.http.get<ApiResponse<InventoryAvailableOption[]>>(`${apiConfig.inventoryBaseUrl}/InventoryConfiguration/solution-center/${solutionCenterId}/configurations/all`);
+  }
+
   create(data: InventoryConfigurationCreate): Observable<ApiResponse<InventoryConfigurationCreateResult>> {
     return this.http.post<ApiResponse<InventoryConfigurationCreateResult>>(`${apiConfig.inventoryBaseUrl}/InventoryConfiguration`, data);
   }

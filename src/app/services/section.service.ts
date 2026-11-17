@@ -1,4 +1,5 @@
 import { Section, SectionCreate, SectionCreateResult, SectionUpdate, SectionUpdateResult } from '../models/section.model';
+import { InventoryAvailableSectionOption, } from '../models/inventory-configuration.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ApiResponse } from '../models/api-response.model';
 import { inject, Injectable } from '@angular/core';
@@ -21,6 +22,10 @@ export class SectionService {
     }
 
     return this.http.get<ApiResponse<Section[]>>(`${apiConfig.inventoryBaseUrl}/Section`, { params, });
+  }
+
+  getAllByConfiguration(solutionCenterId: number, inventoryConfigurationId: number): Observable<ApiResponse<InventoryAvailableSectionOption[]>> {
+    return this.http.get<ApiResponse<InventoryAvailableSectionOption[]>>(`${apiConfig.inventoryBaseUrl}/Section/solution-center/${solutionCenterId}/configuration/${inventoryConfigurationId}/sections/all`);
   }
 
   create(data: SectionCreate): Observable<ApiResponse<SectionCreateResult>> {
