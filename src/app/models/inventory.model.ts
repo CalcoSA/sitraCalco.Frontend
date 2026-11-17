@@ -92,3 +92,25 @@ export interface InventoryCountsResult {
 export interface InventoryTodayExecutionResult {
   inventoryExecutionId: string | null;
 }
+
+export interface InventoryHistoryCount {
+  countNumber: InventoryCountNumber;
+  countValue: number | null;
+  open: number | null;
+  closed: number | null;
+  multiplicationValue: number | null;
+  enteredBy: string;
+}
+
+export interface InventoryHistoryProduct {
+  reference: string;
+  productName: string;
+  unitOfMeasure: string;
+  counts: InventoryHistoryCount[];
+}
+
+export interface InventoryHistoryDay {
+  date: string;
+  inventoryExecutionId: string;
+  products: InventoryHistoryProduct[];
+}
