@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login').then((component) => component.LoginPage),
   },
   {
+    path: 'intranet-access',
+    loadComponent: () => import('./pages/intranet-access/intranet-access').then(module => module.IntranetAccessPage),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     canActivateChild: [authGuard],

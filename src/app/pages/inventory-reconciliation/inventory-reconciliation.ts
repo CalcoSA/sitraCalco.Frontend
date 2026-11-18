@@ -2,6 +2,7 @@ import { InventoryCountNumber, InventoryHistoryCount, InventoryHistoryDay, Inven
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule, NativeDateAdapter, } from '@angular/material/core';
 import { InventoryAvailableOption, InventoryAvailableSectionOption, } from '../../models/inventory-configuration.model';
 import { InventoryConfigurationService, } from '../../services/inventory-configuration.service';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { SolutionCenterService, } from '../../services/solution-center.service';
 import { MatProgressSpinnerModule, } from '@angular/material/progress-spinner';
 import { ResponseModalService, } from '../../services/response-modal.service';
@@ -17,6 +18,7 @@ import { MatSelectModule, } from '@angular/material/select';
 import { MatButtonModule, } from '@angular/material/button';
 import { MatInputModule, } from '@angular/material/input';
 import { MatIconModule, } from '@angular/material/icon';
+import { TemplateRef, ViewChild } from '@angular/core';
 import { finalize, } from 'rxjs';
 
 const COLOMBIAN_DATE_INPUT_FORMAT = {
@@ -79,6 +81,7 @@ class ColombianDateAdapter extends NativeDateAdapter {
     MatTooltipModule,
     MatSelectModule,
     MatButtonModule,
+    MatDialogModule,
     MatInputModule,
     MatIconModule,
   ],
@@ -99,15 +102,21 @@ class ColombianDateAdapter extends NativeDateAdapter {
   templateUrl: './inventory-reconciliation.html',
 })
 
-export class InventoryReconciliation implements OnInit {  
+export class InventoryReconciliation implements OnInit {
+  
+  @ViewChild('observationModal')
+  private observationModalTemplate!: TemplateRef<unknown>;
 
   private readonly inventoryConfigurationService = inject(InventoryConfigurationService);
   private readonly solutionCenterService = inject(SolutionCenterService);
   private readonly responseModalService = inject(ResponseModalService);
   private readonly inventoryService = inject(InventoryService);
   private readonly sectionService = inject(SectionService);
-  private readonly formBuilder = inject(FormBuilder);  
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly dialog = inject(MatDialog);  
   
+  readonly selectedObservationProduct = signal<InventoryHistoryProduct | null>(null);
+  readonly selectedObservationCount = signal<InventoryHistoryCount | null>(null);
   readonly selectedSolutionCenter = signal<SolutionCenter | null>(null);
   readonly sections = signal<InventoryAvailableSectionOption[]>([]);
   readonly inventories = signal<InventoryAvailableOption[]>([]);
@@ -116,9 +125,12 @@ export class InventoryReconciliation implements OnInit {
 
   readonly loadingSolutionCenters = signal(false);
   readonly loadingInventories = signal(false);
+  readonly savingObservation = signal(false);
   readonly loadingSections = signal(false);
   readonly loadingHistory = signal(false);
   readonly validationError = signal('');
+  
+  private observationDialogRef: MatDialogRef<unknown> | null = null;
 
   readonly filterForm = this.formBuilder.group({
     from: this.formBuilder.control<Date | null>(null),
@@ -126,6 +138,11 @@ export class InventoryReconciliation implements OnInit {
     solutionCenterId: this.formBuilder.control<number | null>(null),
     inventoryConfigurationId: this.formBuilder.control<number | null>({ value: null, disabled: true, }),
     sectionId: this.formBuilder.control<number | null>({ value: null, disabled: true, }),
+  });
+
+  readonly observationForm = this.formBuilder.group({
+    observations: this.formBuilder.nonNullable.control(''),
+    append: this.formBuilder.nonNullable.control(true),
   });
 
   readonly tableProducts =
@@ -390,6 +407,15 @@ export class InventoryReconciliation implements OnInit {
     return (product.counts.find(count => count.countNumber === countNumber) ?? null);
   }
 
+  getDifference(count: InventoryHistoryCount): number | null {
+    if (count.multiplicationValue === null || count.multiplicationValue === undefined || count.siesaStock === null || count.siesaStock === undefined) {
+      return null;
+    }
+
+    const difference = count.multiplicationValue - count.siesaStock;
+    return Number(difference.toFixed(4));
+  }
+
   get isWarehouse(): boolean {
     return (this.selectedSolutionCenter() ?.solutionCenterTypeId === 1);
   }
@@ -400,11 +426,96 @@ export class InventoryReconciliation implements OnInit {
 
   getDateColumnSpan(day: InventoryHistoryDay): number {
     const counts = this.getCountNumbers(day).length;
-    return this.isWarehouse ? counts * 2 : counts * 3;
+    return this.isWarehouse ? counts * 5 : counts * 6;
   }
 
   private showHttpError(error: any, title: string, fallback: string): void {
     const message = error.status === 0 ? 'No fue posible comunicarse con el servidor.' : error.error?.message || fallback;
     this.responseModalService.show('error', title, message);
+  }
+
+  openObservationModal(product: InventoryHistoryProduct, count: InventoryHistoryCount): void {
+    this.selectedObservationProduct.set(product);
+    this.selectedObservationCount.set(count);
+    this.observationForm.reset({ observations: '', append: !!count.observations, });
+    this.observationDialogRef = this.dialog.open(
+      this.observationModalTemplate,
+      {
+        width: '520px',
+        maxWidth: 'calc(100vw - 32px)',
+        autoFocus: false,
+        disableClose: this.savingObservation(),
+      }
+    );
+    this.observationDialogRef.afterClosed().subscribe(() => {
+      this.observationDialogRef = null;
+    });
+  }
+
+  closeObservationModal(): void {
+
+    if (this.savingObservation()) {
+      return;
+    }
+
+    this.observationDialogRef?.close();
+    this.observationDialogRef = null;
+
+    this.selectedObservationProduct.set(null);
+    this.selectedObservationCount.set(null);
+    this.observationForm.reset({ observations: '', append: false, });
+  }
+
+  saveObservation(): void {
+
+    if (this.savingObservation()) {
+      return;
+    }
+
+    const count = this.selectedObservationCount();
+
+    if (!count) {
+      return;
+    }
+
+    const observations = this.observationForm.controls.observations.value.trim();
+
+    if (!observations) {
+      this.responseModalService.show('warning', 'Observación requerida', 'Debes escribir una observación.');
+      return;
+    }
+
+    const append = this.observationForm.controls.append.value;
+
+    this.savingObservation.set(true);
+    this.inventoryService
+      .updateObservations(count.inventoryId, { observations, append, })
+      .pipe(
+        finalize(() => {
+          this.savingObservation.set(false);
+        })
+      )
+      .subscribe({
+        next: response => {
+
+          if (!response.isSuccess) {
+            this.responseModalService.show('error', 'No se pudo guardar', response.message || 'No fue posible guardar la observación.');
+            return;
+          }
+
+          this.observationDialogRef?.close();
+          this.observationDialogRef = null;
+
+          this.selectedObservationProduct.set(null);
+          this.selectedObservationCount.set(null);
+          this.observationForm.reset({ observations: '', append: true, });
+          this.responseModalService.show('success', 'Observación guardada', response.message || 'La observación fue guardada correctamente.');
+          this.searchHistory();
+        },
+
+        error: error => {
+          this.showHttpError(error, 'Error al guardar observación', 'Ocurrió un error al guardar la observación.');
+        },
+      });
   }
 }

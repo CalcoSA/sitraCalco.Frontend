@@ -182,7 +182,7 @@
             <tr style="color: #4b2e1f;">
               @for (day of history(); track day.inventoryExecutionId) {
                 @for (countNumber of getCountNumbers(day); track countNumber) {
-                  <th [attr.colspan]="isWarehouse ? 2 : 3" class="px-3 py-2 text-center" style="background-color: #fff8ef; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb; font-weight: 700;">
+                  <th [attr.colspan]="isWarehouse ? 5 : 6" class="px-3 py-2 text-center" style="background-color: #fff8ef; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb; font-weight: 700;">
                     Conteo {{ countNumber }}
                   </th>
                 }
@@ -203,8 +203,17 @@
                       Cerrado
                     </th>
                   }
-                  <th class="px-3 py-2 text-center" style="min-width: 145px; border-right: 1px solid #e0cdbb; border-bottom: 1px solid #e0cdbb;">
+                  <th class="px-3 py-2 text-center" style="min-width: 145px; border-bottom: 1px solid #e0cdbb;">
                     Factor
+                  </th>
+                  <th class="px-3 py-2 text-center" style="min-width: 155px; border-bottom: 1px solid #e0cdbb;">
+                    Existencia Siesa
+                  </th>
+                  <th class="px-3 py-2 text-center" style="min-width: 130px; border-bottom: 1px solid #e0cdbb;">
+                    Diferencia
+                  </th>
+                  <th class="px-3 py-2 text-center" style="min-width: 100px; border-right: 1px solid #d8bfa9; border-bottom: 1px solid #e0cdbb;">
+                    Comentario
                   </th>
                 }
               }
@@ -231,10 +240,39 @@
                         <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
                           {{ count.countValue ?? '—' }}
                         </td>
-                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
                           <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 80px; background-color: #f7e8d8; font-weight: 600;">
                             {{ count.multiplicationValue ?? '—' }}
                           </span>
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
+                          @if (count.siesaStock !== null) {
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 90px; background-color: #e8f5e9; color: #2e7d32; font-weight: 600;">
+                              {{ count.siesaStock }}
+                            </span>
+                          } @else {
+                            <span style="color: #b7aaa2;">
+                              —
+                            </span>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                          @if (getDifference(count) !== null) {
+                            <strong>
+                              {{ getDifference(count) }}
+                            </strong>
+                          } @else {
+                            <span style="color: #b7aaa2;">
+                              —
+                            </span>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center" style="border-right: 1px solid #e0cdbb;">
+                          <button mat-icon-button type="button" (click)="openObservationModal(product, count)" [matTooltip]="count.observations ? 'Ver o agregar comentario' : 'Agregar comentario'" [style.color]="count.observations ? '#2e7d32' : '#4b2e1f'">
+                            <mat-icon>
+                              {{ count.observations ? 'comment' : 'add_comment' }}
+                            </mat-icon>
+                          </button>
                         </td>
                       } @else {
                         <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
@@ -243,30 +281,54 @@
                         <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
                           {{ count.closed ?? '—' }}
                         </td>
-                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
                           <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 80px; background-color: #f7e8d8; font-weight: 600;">
                             {{ count.multiplicationValue ?? '—' }}
                           </span>
                         </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f;">
+                          @if (count.siesaStock !== null) {
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-1" style="min-width: 90px; background-color: #e8f5e9; color: #2e7d32; font-weight: 600;">
+                              {{ count.siesaStock }}
+                            </span>
+                          } @else {
+                            <span style="color: #b7aaa2;">
+                              —
+                            </span>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center" style="color: #4b2e1f; border-right: 1px solid #e0cdbb;">
+                          @if (getDifference(count) !== null) {
+                            <strong>
+                              {{ getDifference(count) }}
+                            </strong>
+                          } @else {
+                            <span style="color: #b7aaa2;">
+                              —
+                            </span>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center" style="border-right: 1px solid #e0cdbb;">
+                          <button mat-icon-button type="button" (click)="openObservationModal(product, count)" [matTooltip]="count.observations ? 'Ver o agregar comentario' : 'Agregar comentario'" [style.color]="count.observations ? '#2e7d32' : '#4b2e1f'">
+                            <mat-icon>
+                              {{ count.observations ? 'comment' : 'add_comment' }}
+                            </mat-icon>
+                          </button>
+                        </td>
                       }
                     } @else {
                       @if (isWarehouse) {
-                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
-                          —
-                        </td>
-                        <td class="px-3 py-3 text-center" style="color: #b7aaa2; border-right: 1px solid #e0cdbb;">
-                          —
-                        </td>
+                        @for (column of [1, 2, 3, 4]; track column) {
+                          <td class="px-3 py-3 text-center" [style.border-right]="column === 4 ? '1px solid #e0cdbb' : null" style="color: #b7aaa2;">
+                            —
+                          </td>
+                        }
                       } @else {
-                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
-                          —
-                        </td>
-                        <td class="px-3 py-3 text-center" style="color: #b7aaa2;">
-                          —
-                        </td>
-                        <td class="px-3 py-3 text-center" style="color: #b7aaa2; border-right: 1px solid #e0cdbb;">
-                          —
-                        </td>
+                        @for (column of [1, 2, 3, 4, 5]; track column) {
+                          <td class="px-3 py-3 text-center" [style.border-right]="column === 5 ? '1px solid #e0cdbb' : null" style="color: #b7aaa2;">
+                            —
+                          </td>
+                        }
                       }
                     }
                   }
@@ -283,3 +345,85 @@
   }
   @if (!loadingHistory() && history().length === 0 && filterForm.controls.sectionId.value) { }
 </div>
+
+<ng-template #observationModal>
+  <div style="background-color: #fffdf8; overflow: hidden;">
+    <div mat-dialog-title class="d-flex align-items-center gap-2 mt-2" style="color: #4b2e1f; font-size: 21px; font-weight: 600;">
+      <mat-icon>
+        comment
+      </mat-icon>
+      <span>
+        Observación
+      </span>
+    </div>
+    <mat-dialog-content style="padding-top: 8px; max-height: 68vh; overflow-y: auto;">
+      @if (selectedObservationProduct(); as product) {
+        <div style="border: 1px solid #e0cdbb; border-radius: 16px; background-color: #fffaf5; padding: 18px; margin-bottom: 20px;">
+          <div style="color: #8b6a55; font-size: 13px; margin-bottom: 3px;">
+            Producto
+          </div>
+          <div style="color: #4b2e1f; font-size: 17px; font-weight: 600;">
+            {{ product.reference }} - {{ product.productName }}
+          </div>
+          @if (selectedObservationCount(); as count) {
+            <div style="color: #8b6a55; font-size: 13px; margin-top: 5px;">
+              Conteo {{ count.countNumber }}
+            </div>
+          }
+        </div>
+      }
+      @if (selectedObservationCount(); as count) {
+        @if (count.observations) {
+          <div style="border: 1px solid #e0cdbb; border-radius: 16px; background-color: #fffaf5; padding: 18px; margin-bottom: 20px;">
+            <div style="color: #8b6a55; font-size: 13px; margin-bottom: 5px;">
+              Observación actual
+            </div>
+            <div style="color: #4b2e1f;">
+              {{ count.observations }}
+            </div>
+          </div>
+        }
+      }
+      <form [formGroup]="observationForm">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100">
+          <mat-label>
+            Observación
+          </mat-label>
+          <textarea matInput formControlName="observations" rows="5" maxlength="2000" placeholder="Escribe una observación"></textarea>
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" class="px-4 pb-3 pt-2">
+      <button mat-stroked-button type="button" (click)="closeObservationModal()" [disabled]="savingObservation()" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; width: 130px; height: 44px; padding: 0 18px; font-weight: 600;">
+        <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 44px; line-height: 1;">
+          <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+            close
+          </mat-icon>
+          <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+            Cancelar
+          </span>
+        </span>
+      </button>
+      <button mat-flat-button type="button" (click)="saveObservation()" [disabled]="savingObservation()" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; width: 130px; height: 44px; padding: 0 18px; font-weight: 600;">
+        @if (savingObservation()) {
+          <span
+            class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 44px; line-height: 1;">
+            <mat-spinner diameter="20" style="--mat-sys-primary: #ffffff;"></mat-spinner>
+            <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+              Guardando...
+            </span>
+          </span>
+        } @else {
+          <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 44px; line-height: 1;">
+            <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+              save
+            </mat-icon>
+            <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+              Guardar
+            </span>
+          </span>
+        }
+      </button>
+    </mat-dialog-actions>
+  </div>
+</ng-template>
