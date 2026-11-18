@@ -966,6 +966,7 @@ export class Inventories implements OnInit {
                 open: isWarehouse ? null : draft.open,
                 closed: isWarehouse ? null : draft.closed,
                 multiplicationValue: draft.multiplicationValue ?? 0,
+                siesaStock: product.siesaStockStatus === 'FOUND' ? product.existencia1 ?? null : null,
               };
             }
           ),

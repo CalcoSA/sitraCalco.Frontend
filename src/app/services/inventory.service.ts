@@ -1,4 +1,4 @@
-import { InventoryCreate, InventorySaveResult, InventoryCountNumber, InventoryCountsResult, InventoryTodayExecutionResult, InventoryHistoryDay } from '../models/inventory.model';
+import { InventoryCreate, InventorySaveResult, InventoryCountNumber, InventoryCountsResult, InventoryTodayExecutionResult, InventoryHistoryDay, InventoryObservationUpdate, InventoryObservationUpdateResult } from '../models/inventory.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ApiResponse } from '../models/api-response.model';
 import { inject, Injectable } from '@angular/core';
@@ -48,5 +48,9 @@ export class InventoryService {
 
   create(data: InventoryCreate): Observable<ApiResponse<InventorySaveResult>> {
     return this.http.post<ApiResponse<InventorySaveResult>>(`${apiConfig.inventoryBaseUrl}/Inventory`, data);
+  }
+
+  updateObservations(inventoryId: number, data: InventoryObservationUpdate): Observable<ApiResponse<InventoryObservationUpdateResult>> {
+    return this.http.patch<ApiResponse<InventoryObservationUpdateResult>>(`${apiConfig.inventoryBaseUrl}/Inventory/${inventoryId}/observations`, data);
   }
 }

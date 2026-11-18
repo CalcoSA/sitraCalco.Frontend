@@ -21,6 +21,7 @@ export interface InventoryCreateItem {
   open: number | null;
   closed: number | null;
   multiplicationValue: number;
+  siesaStock: number | null;
 }
 
 export interface InventoryCreate {
@@ -94,11 +95,14 @@ export interface InventoryTodayExecutionResult {
 }
 
 export interface InventoryHistoryCount {
+  inventoryId: number;
   countNumber: InventoryCountNumber;
   countValue: number | null;
   open: number | null;
   closed: number | null;
   multiplicationValue: number | null;
+  siesaStock: number | null;
+  observations: string | null;
   enteredBy: string;
 }
 
@@ -113,4 +117,15 @@ export interface InventoryHistoryDay {
   date: string;
   inventoryExecutionId: string;
   products: InventoryHistoryProduct[];
+}
+
+export interface InventoryObservationUpdate {
+  observations: string;
+  append: boolean;
+}
+
+export interface InventoryObservationUpdateResult {
+  inventoryId: number;
+  submittedObservations: string;
+  append: boolean;
 }
