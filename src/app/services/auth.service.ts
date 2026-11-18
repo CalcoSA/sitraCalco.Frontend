@@ -18,6 +18,10 @@ export class AuthService {
     return this.http.post<ApiResponse<LoginResult>>(`${apiConfig.authBaseUrl}/Auth/login`, data);
   }
 
+  intranetAccess(userLogin: string, ts: number, sig: string): Observable<ApiResponse<LoginResult>> {
+    return this.http.get<ApiResponse<LoginResult>>(`${apiConfig.authBaseUrl}/Auth/intranet-access`, { params: { userLogin, ts: ts.toString(), sig }});
+  }
+
   registerActivity(): Observable<ApiResponse<{ sessionExpiresAt: string }>> {
     return this.http.post<ApiResponse<{ sessionExpiresAt: string }>>(`${apiConfig.authBaseUrl}/Auth/activity`, { });
   }
