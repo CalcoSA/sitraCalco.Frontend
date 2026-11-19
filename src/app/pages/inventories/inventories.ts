@@ -1,4 +1,5 @@
 import { InventorySectionProduct, InventoryProductDraft, InventoryDraft, InventoryCreate, InventoryCountNumber, InventoryStoredCount, } from '../../models/inventory.model';
+import { InventoryExcelExportService, InventoryExcelExportCount, InventoryExcelExportProduct, } from '../../services/inventory-excel-export.service';
 import { InventoryAvailableOption, InventoryAvailableSectionOption, } from '../../models/inventory-configuration.model';
 import { InventoryConfigurationService, } from '../../services/inventory-configuration.service';
 import { OfflineInventoryService, } from '../../services/offline-inventory.service';
@@ -49,7 +50,10 @@ export class Inventories implements OnInit {
   private readonly networkStatusService = inject(NetworkStatusService);
   private readonly inventoryService = inject(InventoryService);
   private readonly sessionService = inject(SessionService);  
-  private readonly formBuilder = inject(FormBuilder);  
+  private readonly formBuilder = inject(FormBuilder);
+  
+  // Excel temporal
+  private readonly inventoryExcelExportService = inject(InventoryExcelExportService);
 
   readonly pendingCounts = signal<Record<number, Partial<Record<InventoryCountNumber, InventoryStoredCount>>>>({});
   readonly savedCounts = signal<Record<number, Partial<Record<InventoryCountNumber, InventoryStoredCount>>>>({});
@@ -63,7 +67,10 @@ export class Inventories implements OnInit {
   readonly inventories = signal<InventoryAvailableOption[]>([]);
   readonly inventoryExecutionId = signal<string | null>(null);  
   readonly products = signal<InventorySectionProduct[]>([]);
-  readonly solutionCenters = signal<SolutionCenter[]>([]);  
+  readonly solutionCenters = signal<SolutionCenter[]>([]);
+  
+  // Excel temporal
+  readonly exportingExcel = signal(false);
 
   readonly loadingSolutionCenters = signal(false);
   readonly loadingInventories = signal(false);
@@ -652,7 +659,7 @@ export class Inventories implements OnInit {
     const current = this.getProductDraft(product.productId);
     const closed = current.closed;
     const factor = product.f122Factor;
-    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (open * factor) + closed : null;
+    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (closed * factor) + open : null;
 
     this.updateProductDraft(
       product.productId,
@@ -668,7 +675,7 @@ export class Inventories implements OnInit {
     const current = this.getProductDraft(product.productId);
     const open = current.open;
     const factor = product.f122Factor;
-    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (open * factor) + closed : null;
+    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (closed * factor) + open : null;
 
     this.updateProductDraft(
       product.productId,
@@ -1093,7 +1100,12 @@ export class Inventories implements OnInit {
   getSavedCount(productId: number, countNumber: InventoryCountNumber): InventoryStoredCount | null {
     return (this.savedCounts()[productId] ?.[countNumber] ?? null);
   }
+  /*
+  getPendingCount(productId: number, countNumber: InventoryCountNumber): InventoryStoredCount | null {
+    return (this.pendingCounts()[productId]?.[countNumber] ?? null);
+  } */
 
+  // Excel temporal - Descmentar el anterior
   getPendingCount(productId: number, countNumber: InventoryCountNumber): InventoryStoredCount | null {
     return (this.pendingCounts()[productId]?.[countNumber] ?? null);
   }
@@ -1247,5 +1259,132 @@ export class Inventories implements OnInit {
 
   getCalculatedFactor(product: InventorySectionProduct): number | null {
     return (this.getProductDraft(product.productId).multiplicationValue ?? null);
+  }
+
+  // Excel temporal
+  private getExportCount(productId: number, countNumber: InventoryCountNumber): InventoryExcelExportCount | null {
+    const savedCount = this.getSavedCount(productId, countNumber);
+
+    if (savedCount) {
+      return {
+        countNumber,
+        status: 'GUARDADO',
+        value: savedCount.value,
+        open: savedCount.open,
+        closed: savedCount.closed,
+        multiplicationValue:
+          savedCount.multiplicationValue,
+      };
+    }
+
+    const pendingCount = this.getPendingCount(productId, countNumber);
+
+    if (pendingCount) {
+      return {
+        countNumber,
+        status: 'POR SINCRONIZAR',
+        value: pendingCount.value,
+        open: pendingCount.open,
+        closed: pendingCount.closed,
+        multiplicationValue:
+          pendingCount.multiplicationValue,
+      };
+    }
+
+    return null;
+  }
+
+  // Excel temporal
+  private getExportableCountNumbers():
+    InventoryCountNumber[] {
+    return this.countNumbers.filter(countNumber => this.products().some(product => this.getExportCount(product.productId, countNumber) !== null));
+  }
+
+  // Excel temporal
+  get canExportInventory(): boolean {
+    if (this.products().length === 0 || this.loadingProducts() || this.loadingCounts() || this.exportingExcel()) {
+      return false;
+    }
+
+    return (this.getExportableCountNumbers().length > 0);
+  }
+
+  // Excel temporal
+  async exportInventoryExcel(): Promise<void> {
+    if (this.exportingExcel()) {
+      return;
+    }
+
+    const solutionCenter = this.selectedSolutionCenter();
+    const solutionCenterId = this.solutionCenterControl.value;
+    const inventoryConfigurationId = this.inventoryControl.value;
+    const sectionId = this.sectionControl.value;
+
+    if (!solutionCenter || !solutionCenterId || !inventoryConfigurationId || !sectionId) {
+      this.responseModalService.show('warning', 'Información incompleta', 'Debes seleccionar la bodega o punto de venta, el inventario y la sección.');
+      return;
+    }
+
+    const inventory = this.inventories().find(item => item.inventoryConfigurationId === inventoryConfigurationId);
+    const section = this.sections().find(item => item.sectionId === sectionId);
+
+    if (!inventory || !section) {
+      this.responseModalService.show('warning', 'Información incompleta', 'No fue posible obtener la información del inventario o de la sección.');
+      return;
+    }
+
+    const countNumbers = this.getExportableCountNumbers();
+
+    if (countNumbers.length === 0) {
+      this.responseModalService.show('info', 'Sin información para exportar', 'Debes finalizar al menos un conteo antes de exportar el inventario.');
+      return;
+    }
+
+    const products:
+      InventoryExcelExportProduct[] =
+      this.products().map(
+        product => {
+          const counts: Partial<Record<InventoryCountNumber, InventoryExcelExportCount>> = {};
+
+          for ( const countNumber of countNumbers) {
+            const count = this.getExportCount(product.productId, countNumber);
+
+            if (count) {
+              counts[countNumber] = count;
+            }
+          }
+
+          return {
+            reference: product.reference,
+            productName: product.productName,
+            unitOfMeasure: product.unitOfMeasure,
+            counts,
+          };
+        }
+      );
+
+    this.exportingExcel.set(true);
+
+    try {
+
+      await this.inventoryExcelExportService
+        .exportInventory({
+          solutionCenterCode: solutionCenter.solutionCenterCode,
+          solutionCenterName: solutionCenter.solutionCenterName,
+          solutionCenterTypeId: solutionCenter.solutionCenterTypeId,
+          solutionCenterTypeName: solutionCenter.solutionCenterTypeName,
+          inventoryConfigurationName: inventory.inventoryConfigurationName,
+          sectionName: section.sectionName,
+          inventoryExecutionId: this.inventoryExecutionId(),
+          countNumbers,
+          products,
+        });
+
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Ocurrió un error al generar el archivo de Excel.';
+      this.responseModalService.show('error', 'Error al exportar', message);
+    } finally {
+      this.exportingExcel.set(false);
+    }
   }
 }

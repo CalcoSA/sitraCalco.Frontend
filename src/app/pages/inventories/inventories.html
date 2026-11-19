@@ -162,6 +162,25 @@
               </span>
             }
           </button>
+          <button mat-stroked-button type="button" (click)="exportInventoryExcel()" [disabled]="!canExportInventory" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 48px; min-width: 170px; padding: 0 20px; font-weight: 600;">
+            @if (exportingExcel()) {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+                <mat-spinner diameter="20" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Exportando...
+                </span>
+              </span>
+            } @else {
+              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+                <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+                  table_view
+                </mat-icon>
+                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                  Exportar Excel
+                </span>
+              </span>
+            }
+          </button>
           <button mat-flat-button type="button" (click)="finishSection()" [disabled]="products().length === 0 || savingInventory() || loadingCounts() || !hasPendingCount" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
             @if (savingInventory()) {
               <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px;">
@@ -371,9 +390,12 @@
                     </td>
                     <td class="px-3 py-2 text-center">
                       @if (product.siesaStockStatus === 'FOUND') {
-                        <span
-                          class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 95px; background-color: #e8f5e9; color: #2e7d32; font-size: 13px; font-weight: 700; white-space: nowrap;">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 95px; background-color: #e8f5e9; color: #2e7d32; font-size: 13px; font-weight: 700; white-space: nowrap;">
                           {{ product.existencia1 ?? '—' }} - {{ product.unidadInventario || '—' }}
+                        </span>
+                      } @else if (product.siesaStockStatus === 'UNAVAILABLE') {
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 95px; background-color: #fff3e0; color: #8a5a00; font-size: 12px; font-weight: 600; white-space: nowrap;" matTooltip="No fue posible consultar las existencias en SIESA.">
+                          —
                         </span>
                       } @else {
                         <span class="d-inline-flex align-items-center justify-content-center rounded-pill px-3 py-2" style="min-width: 65px; background-color: #f5f0eb; color: #8b6a55; font-size: 13px; font-weight: 600;">
