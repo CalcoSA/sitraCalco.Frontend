@@ -12,7 +12,7 @@ export interface InventorySectionProduct {
   unidadInventario?: string | null;
   existencia1?: number | null;
   existencia2?: number | null;
-  siesaStockStatus?: 'FOUND' | 'NOT_FOUND' | null;
+  siesaStockStatus?: 'FOUND' | 'NOT_FOUND' | 'UNAVAILABLE' | null;
 }
 
 export interface InventoryCreateItem {
