@@ -162,25 +162,27 @@
               </span>
             }
           </button>
-          <button mat-stroked-button type="button" (click)="exportInventoryExcel()" [disabled]="!canExportInventory" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 48px; min-width: 170px; padding: 0 20px; font-weight: 600;">
-            @if (exportingExcel()) {
-              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
-                <mat-spinner diameter="20" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
-                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
-                  Exportando...
+          @if (canViewExportInventory) {
+            <button mat-stroked-button type="button" (click)="exportInventoryExcel()" [disabled]="!canExportInventory" style="border-color: #8b6a55; color: #4b2e1f; border-radius: 10px; height: 48px; min-width: 170px; padding: 0 20px; font-weight: 600;">
+              @if (exportingExcel()) {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+                  <mat-spinner diameter="20" style="--mat-sys-primary: #4b2e1f;"></mat-spinner>
+                  <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                    Exportando...
+                  </span>
                 </span>
-              </span>
-            } @else {
-              <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
-                <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
-                  table_view
-                </mat-icon>
-                <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
-                  Exportar Excel
+              } @else {
+                <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px; line-height: 1;">
+                  <mat-icon style="display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 20px; margin: 0;">
+                    table_view
+                  </mat-icon>
+                  <span class="d-flex align-items-center" style="height: 20px; line-height: 20px;">
+                    Exportar Excel
+                  </span>
                 </span>
-              </span>
-            }
-          </button>
+              }
+            </button>
+          }
           <button mat-flat-button type="button" (click)="finishSection()" [disabled]="products().length === 0 || savingInventory() || loadingCounts() || !hasPendingCount" style="background-color: #4b2e1f; color: #ffffff; border-radius: 10px; height: 48px; min-width: 180px; padding: 0 20px; font-weight: 600;">
             @if (savingInventory()) {
               <span class="d-inline-flex align-items-center justify-content-center gap-2" style="width: 100%; height: 48px;">
