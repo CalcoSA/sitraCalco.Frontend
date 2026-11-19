@@ -1387,4 +1387,20 @@ export class Inventories implements OnInit {
       this.exportingExcel.set(false);
     }
   }
+
+  get canViewExportInventory(): boolean {
+    const role = this.sessionService.getUser()?.nameRole;
+
+    if (!role) {
+      return false;
+    }
+
+    const normalizedRole = role
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase();
+
+    return normalizedRole !== 'PDV' && normalizedRole !== 'AUXILIAR ALMACEN';
+  }
 }

@@ -8,7 +8,7 @@ import { Injectable } from '@angular/core';
 export class InventoryDraftService {
 
   private readonly prefix = 'sitracalco:inventory-draft';
-  private readonly ttlMilliseconds = 2 * 60 * 60 * 1000;
+  private readonly ttlMilliseconds = 3 * 60 * 60 * 1000;
 
   buildKey(userName: string, solutionCenterId: number, inventoryConfigurationId: number, sectionId: number, countNumber: number): string {
     return [
