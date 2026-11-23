@@ -657,9 +657,7 @@ export class Inventories implements OnInit {
   onOpenInput(product: InventorySectionProduct, event: Event): void {
     const open = this.parseNumber(event);
     const current = this.getProductDraft(product.productId);
-    const closed = current.closed;
-    const factor = product.f122Factor;
-    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (closed * factor) + open : null;
+    const multiplicationValue = this.calculateMultiplicationValue(product, open, current.closed);
 
     this.updateProductDraft(
       product.productId,
@@ -673,9 +671,7 @@ export class Inventories implements OnInit {
   onClosedInput(product: InventorySectionProduct, event: Event): void {
     const closed = this.parseNumber(event);
     const current = this.getProductDraft(product.productId);
-    const open = current.open;
-    const factor = product.f122Factor;
-    const multiplicationValue = open !== null && closed !== null && factor !== null && factor !== undefined ? (closed * factor) + open : null;
+    const multiplicationValue = this.calculateMultiplicationValue(product, current.open, closed);
 
     this.updateProductDraft(
       product.productId,
@@ -1259,6 +1255,48 @@ export class Inventories implements OnInit {
 
   getCalculatedFactor(product: InventorySectionProduct): number | null {
     return (this.getProductDraft(product.productId).multiplicationValue ?? null);
+  }
+
+  private getPackageQuantity(unitOfMeasure: string | null | undefined): number | null {
+    if (!unitOfMeasure) {
+      return null;
+    }
+
+    const normalized = unitOfMeasure.trim().replace(',', '.');
+    const match = normalized.match(/^x\s*(\d+(?:\.\d+)?)/i);
+
+    if (!match) {
+      return null;
+    }
+
+    const quantity = Number(match[1]);
+
+    return Number.isFinite(quantity) && quantity > 0 ? quantity : null;
+  }
+
+  private calculateMultiplicationValue(product: InventorySectionProduct, open: number | null, closed: number | null): number | null {
+
+    if (open === null || closed === null) {
+      return null;
+    }
+
+    const factor = product.f122Factor;
+
+    if (factor === null || factor === undefined) {
+      return null;
+    }
+
+    if (factor === 1) {
+      const packageQuantity = this.getPackageQuantity(product.unitOfMeasure);
+
+      if (packageQuantity !== null) {
+        return closed + (open / packageQuantity);
+      }
+
+      return (closed * factor) + open;
+    }
+
+    return (closed * factor) + open;
   }
 
   // Excel temporal
