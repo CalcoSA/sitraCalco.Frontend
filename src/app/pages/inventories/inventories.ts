@@ -643,7 +643,7 @@ export class Inventories implements OnInit {
   onCountInput(product: InventorySectionProduct, event: Event): void {
     const countValue = this.parseNumber(event);
     const factor = product.f122Factor;
-    const multiplicationValue = countValue !== null && factor !== null && factor !== undefined ? countValue * factor : null;
+    const multiplicationValue = countValue !== null && factor !== null && factor !== undefined ? this.roundToFourDecimals(countValue * factor) : null;
 
     this.updateProductDraft(
       product.productId,
@@ -1286,17 +1286,29 @@ export class Inventories implements OnInit {
       return null;
     }
 
+    let result: number;
+
     if (factor === 1) {
       const packageQuantity = this.getPackageQuantity(product.unitOfMeasure);
 
       if (packageQuantity !== null) {
-        return closed + (open / packageQuantity);
+        result = closed + (open / packageQuantity);
+      } else {
+        result = (closed * factor) + open;
       }
-
-      return (closed * factor) + open;
+    } else {
+      result = (closed * factor) + open;
     }
 
-    return (closed * factor) + open;
+    return this.roundToFourDecimals(result);
+  }
+
+  private roundToFourDecimals(value: number | null): number | null {
+    if (value === null || !Number.isFinite(value)) {
+      return null;
+    }
+
+    return Number(value.toFixed(4));
   }
 
   // Excel temporal
